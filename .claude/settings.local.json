@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir \"C:\\Users\\david\\Documents\\React Projects\\rrhhReactClaude\")",
+      "Bash(dir:*)",
+      "Bash(npx prisma migrate reset)",
+      "Bash(find:*)",
+      "Bash(mkdir:*)",
+      "Bash(move QUICKSTART.md \"docs\\instalacion\"\" && move INSTALACION.md \"docsinstalacion\"\")",
+      "Bash(mv:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
