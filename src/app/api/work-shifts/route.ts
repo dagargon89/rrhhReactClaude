@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     // Parsear workingHours de string JSON a objeto
     const workShiftsWithParsed = workShifts.map(shift => ({
       ...shift,
-      workingHours: JSON.parse(shift.workingHours),
+      workingHours: shift.workingHours ? JSON.parse(shift.workingHours) : null,
     }))
 
     return NextResponse.json(workShiftsWithParsed)
@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
     // Parsear workingHours de vuelta a objeto para la respuesta
     const workShiftWithParsed = {
       ...workShift,
-      workingHours: JSON.parse(workShift.workingHours),
+      workingHours: workShift.workingHours ? JSON.parse(workShift.workingHours) : null,
     }
 
     return NextResponse.json(workShiftWithParsed, { status: 201 })

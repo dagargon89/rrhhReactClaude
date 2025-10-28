@@ -50,7 +50,7 @@ export async function GET(
     // Parsear workingHours de string JSON a objeto
     const workShiftWithParsed = {
       ...workShift,
-      workingHours: JSON.parse(workShift.workingHours),
+      workingHours: workShift.workingHours ? JSON.parse(workShift.workingHours) : null,
     }
 
     return NextResponse.json(workShiftWithParsed)
@@ -123,7 +123,7 @@ export async function PUT(
     // Parsear workingHours de vuelta a objeto para la respuesta
     const workShiftWithParsed = {
       ...updatedShift,
-      workingHours: JSON.parse(updatedShift.workingHours),
+      workingHours: updatedShift.workingHours ? JSON.parse(updatedShift.workingHours) : null,
     }
 
     return NextResponse.json(workShiftWithParsed)

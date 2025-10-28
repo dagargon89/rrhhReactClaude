@@ -1,7 +1,7 @@
 import { z } from "zod"
 
-// Esquema para crear regla disciplinaria
-export const createDisciplinaryRuleSchema = z.object({
+// Objeto base para regla disciplinaria
+const disciplinaryRuleBaseSchema = z.object({
   name: z.string().min(1, "El nombre es requerido").max(100, "El nombre no puede exceder 100 caracteres"),
   description: z.string().max(500, "La descripción no puede exceder 500 caracteres").optional(),
   triggerType: z.string().min(1, "El tipo de disparador es requerido"),
@@ -17,7 +17,10 @@ export const createDisciplinaryRuleSchema = z.object({
   notificationEnabled: z.boolean().default(true),
   notificationEmails: z.array(z.string().email("Email inválido")).default([]),
   isActive: z.boolean().default(true),
-}).refine(
+})
+
+// Esquema para crear regla disciplinaria
+export const createDisciplinaryRuleSchema = disciplinaryRuleBaseSchema.refine(
   (data) => {
     // Si el tipo de acción es SUSPENSION, debe tener suspensionDays
     if (data.actionType === "SUSPENSION") {
@@ -32,7 +35,7 @@ export const createDisciplinaryRuleSchema = z.object({
 )
 
 // Esquema para actualizar regla disciplinaria
-export const updateDisciplinaryRuleSchema = createDisciplinaryRuleSchema.partial()
+export const updateDisciplinaryRuleSchema = disciplinaryRuleBaseSchema.partial()
 
 // Tipos TypeScript inferidos
 export type CreateDisciplinaryRuleInput = z.infer<typeof createDisciplinaryRuleSchema>

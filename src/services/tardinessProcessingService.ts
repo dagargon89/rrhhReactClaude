@@ -225,7 +225,6 @@ export class TardinessProcessingService {
               ? subDays(new Date(), -applicableRule.suspensionDays)
               : null,
           suspensionDays: applicableRule.suspensionDays,
-          affectsSalary: applicableRule.affectsSalary,
           reason: `Acumulación de ${currentCount} ${triggerType.toLowerCase()}`,
           status: applicableRule.requiresApproval ? "PENDING" : "ACTIVE",
         },
@@ -261,7 +260,6 @@ export class TardinessProcessingService {
         recordId: record.id,
         requiresApproval: applicableRule.requiresApproval,
         suspensionDays: applicableRule.suspensionDays,
-        affectsSalary: applicableRule.affectsSalary,
       }
     } catch (error) {
       console.error("Error checking disciplinary actions:", error)
@@ -408,7 +406,7 @@ export class TardinessProcessingService {
       data: {
         status: approved ? "ACTIVE" : "CANCELLED",
         approvedById,
-        approvalDate: new Date(),
+        approvedAt: new Date(),
         notes: notes || record.notes,
       },
     })
