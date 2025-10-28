@@ -21,7 +21,10 @@
       "Bash(if [ -f \"C:\\Users\\david\\Documents\\React Projects\\rrhhReactClaude\\src\\app\\(dashboard)\\admin$module\\new\\page.tsx\" ])",
       "Bash(then echo \"✅ Tiene página NEW\")",
       "Bash(else echo \"❌ NO tiene página NEW\")",
-      "Bash(fi)"
+      "Bash(fi)",
+      "Bash(npm run build:*)",
+      "Bash(for file in \"src/app/api/leave-balances/[id]/route.ts\" \"src/app/api/leave-balances/route.ts\" \"src/app/api/leave-requests/[id]/review/route.ts\" \"src/app/api/leave-requests/route.ts\" \"src/app/api/leave-types/[id]/route.ts\" \"src/app/api/leave-types/route.ts\")",
+      "Bash(do echo \"Updating $file\")"
     ],
     "deny": [],
     "ask": []

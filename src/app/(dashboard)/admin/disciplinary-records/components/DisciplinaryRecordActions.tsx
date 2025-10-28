@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { CheckCircle, XCircle, Eye, MoreHorizontal, Loader2 } from "lucide-react"
+import { CheckCircle, XCircle, Eye, MoreHorizontal, Loader2, Edit } from "lucide-react"
 import { toast } from "sonner"
 import Link from "next/link"
 
@@ -130,6 +130,12 @@ export function DisciplinaryRecordActions({ record }: DisciplinaryRecordActionsP
             <Link href={`/admin/disciplinary-records/${record.id}`}>
               <Eye className="mr-2 h-4 w-4" />
               Ver detalles
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href={`/admin/disciplinary-records/${record.id}/edit`}>
+              <Edit className="mr-2 h-4 w-4" />
+              Editar
             </Link>
           </DropdownMenuItem>
           {record.status === "PENDING" && (

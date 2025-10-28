@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ArrowLeft, User, Clock, AlertTriangle, TrendingUp, Calendar, FileText } from "lucide-react"
 import Link from "next/link"
+import { TardinessAccumulationActions } from "./TardinessAccumulationActions"
 
 async function getEmployeeAccumulations(employeeId: string) {
   const employee = await prisma.employee.findUnique({
@@ -261,9 +262,12 @@ export default async function EmployeeAccumulationsPage({
                           </Badge>
                         )}
                       </div>
-                      <Badge className={risk.color}>
-                        {risk.label}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge className={risk.color}>
+                          {risk.label}
+                        </Badge>
+                        <TardinessAccumulationActions accumulation={acc} />
+                      </div>
                     </div>
 
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">

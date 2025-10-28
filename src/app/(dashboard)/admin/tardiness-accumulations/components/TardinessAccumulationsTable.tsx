@@ -232,7 +232,7 @@ export function TardinessAccumulationsTable({
       cell: ({ row }) => {
         return (
           <Button variant="outline" size="sm" asChild>
-            <Link href={`/admin/tardiness-accumulations/${row.original.employeeId}`}>
+            <Link href={`/admin/tardiness-accumulations/employee/${row.original.employeeId}`}>
               <Eye className="h-4 w-4 mr-1" />
               Ver historial
             </Link>
