@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { checkInSchema } from "@/lib/validations/attendance"
-import { TardinessProcessingService } from "@/services/tardinessProcessingService"
+import { processTardiness } from "@/services/tardinessService"
 import { z } from "zod"
 
 // POST - Registrar entrada (check-in)
@@ -132,33 +132,42 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Procesar tardanza si aplica
+    // Procesar tardanza si aplica (después del check-in exitoso)
     if (minutesLate > 0 && scheduledStartTime) {
       try {
-        tardinessResult = await TardinessProcessingService.processTardiness(
-          validatedData.employeeId,
-          new Date(),
-          scheduledStartTime,
-          attendance.id
-        )
+        tardinessResult = await processTardiness({
+          employeeId: validatedData.employeeId,
+          minutesLate,
+          checkInTime: attendance.checkInTime!,
+          attendanceId: attendance.id,
+        })
+
+        console.log('✅ Tardanza procesada:', {
+          employeeId: validatedData.employeeId,
+          minutesLate,
+          rule: tardinessResult.ruleName,
+          type: tardinessResult.accumulationType,
+          formalTardiesAdded: tardinessResult.formalTardiesAdded,
+          stats: tardinessResult.currentMonthStats,
+          disciplinaryAction: tardinessResult.disciplinaryActionTriggered,
+        })
       } catch (error) {
-        console.error("Error processing tardiness:", error)
+        console.error("❌ Error al procesar tardanza:", error)
         // No fallar el check-in si hay error en el procesamiento de tardanzas
       }
     }
 
     return NextResponse.json({
-      ...attendance,
-      tardinessProcessing: tardinessResult ? {
+      success: true,
+      attendance,
+      tardiness: tardinessResult ? {
         minutesLate,
-        ruleApplied: tardinessResult.ruleApplied,
-        accumulation: {
-          lateArrivalsCount: tardinessResult.accumulation.lateArrivalsCount,
-          formalTardiesCount: tardinessResult.accumulation.formalTardiesCount,
-          administrativeActs: tardinessResult.accumulation.administrativeActs,
-        },
-        conversionToFormalTardiness: tardinessResult.conversionToFormalTardiness,
+        ruleApplied: tardinessResult.ruleName,
+        accumulationType: tardinessResult.accumulationType,
+        formalTardiesAdded: tardinessResult.formalTardiesAdded,
+        currentMonthStats: tardinessResult.currentMonthStats,
         disciplinaryActionTriggered: tardinessResult.disciplinaryActionTriggered,
+        disciplinaryActionId: tardinessResult.disciplinaryActionId,
       } : null
     }, { status: 201 })
   } catch (error) {

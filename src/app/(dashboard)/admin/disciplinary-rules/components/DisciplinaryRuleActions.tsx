@@ -18,11 +18,11 @@ import { Edit, Trash2, Loader2, Power, PowerOff, Eye } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
 
-interface TardinessRuleActionsProps {
+interface DisciplinaryRuleActionsProps {
   rule: any
 }
 
-export function TardinessRuleActions({ rule }: TardinessRuleActionsProps) {
+export function DisciplinaryRuleActions({ rule }: DisciplinaryRuleActionsProps) {
   const router = useRouter()
   const [deleting, setDeleting] = useState(false)
   const [toggling, setToggling] = useState(false)
@@ -30,7 +30,7 @@ export function TardinessRuleActions({ rule }: TardinessRuleActionsProps) {
   const handleDelete = async () => {
     setDeleting(true)
     try {
-      const response = await fetch(`/api/tardiness-rules/${rule.id}`, {
+      const response = await fetch(`/api/disciplinary-rules/${rule.id}`, {
         method: "DELETE",
       })
 
@@ -52,7 +52,7 @@ export function TardinessRuleActions({ rule }: TardinessRuleActionsProps) {
   const handleToggleStatus = async () => {
     setToggling(true)
     try {
-      const response = await fetch(`/api/tardiness-rules/${rule.id}`, {
+      const response = await fetch(`/api/disciplinary-rules/${rule.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -85,14 +85,14 @@ export function TardinessRuleActions({ rule }: TardinessRuleActionsProps) {
     <div className="flex items-center gap-2">
       {/* Botón Ver */}
       <Button variant="outline" size="sm" asChild>
-        <Link href={`/admin/tardiness-rules/${rule.id}`}>
+        <Link href={`/admin/disciplinary-rules/${rule.id}`}>
           <Eye className="h-4 w-4" />
         </Link>
       </Button>
 
       {/* Botón Editar */}
       <Button variant="outline" size="sm" asChild>
-        <Link href={`/admin/tardiness-rules/${rule.id}/edit`}>
+        <Link href={`/admin/disciplinary-rules/${rule.id}/edit`}>
           <Edit className="h-4 w-4" />
         </Link>
       </Button>
@@ -138,7 +138,7 @@ export function TardinessRuleActions({ rule }: TardinessRuleActionsProps) {
             <AlertDialogDescription>
               Esta acción no se puede deshacer. Se eliminará permanentemente la regla{" "}
               <span className="font-semibold">{rule.name}</span> y dejará de aplicarse
-              en el procesamiento de tardanzas.
+              en el sistema disciplinario.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

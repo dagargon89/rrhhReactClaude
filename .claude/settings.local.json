@@ -7,7 +7,21 @@
       "Bash(find:*)",
       "Bash(mkdir:*)",
       "Bash(move QUICKSTART.md \"docs\\instalacion\"\" && move INSTALACION.md \"docsinstalacion\"\")",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "Bash(for dir in */)",
+      "Bash(do echo \"=== $dir ===\")",
+      "Bash(ls:*)",
+      "Bash(done)",
+      "Bash(node apply-corrections.js:*)",
+      "Bash(npx prisma db push:*)",
+      "Bash(node setup-tardiness-system.js:*)",
+      "Bash(npx prisma generate)",
+      "Bash(for module in users employees departments positions work-shifts schedules attendance tardiness-rules disciplinary-rules disciplinary-records leaves incidents)",
+      "Bash(do echo -n \"$module: \")",
+      "Bash(if [ -f \"C:\\Users\\david\\Documents\\React Projects\\rrhhReactClaude\\src\\app\\(dashboard)\\admin$module\\new\\page.tsx\" ])",
+      "Bash(then echo \"✅ Tiene página NEW\")",
+      "Bash(else echo \"❌ NO tiene página NEW\")",
+      "Bash(fi)"
     ],
     "deny": [],
     "ask": []

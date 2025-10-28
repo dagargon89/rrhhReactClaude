@@ -1,25 +1,24 @@
 import { prisma } from "@/lib/prisma"
 import { notFound } from "next/navigation"
-import { EditTardinessRuleForm } from "./EditTardinessRuleForm"
+import { EditDisciplinaryRuleForm } from "./EditDisciplinaryRuleForm"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
 
-// Función Server-Side para obtener la regla
-async function getTardinessRule(id: string) {
-  const rule = await prisma.tardinessRule.findUnique({
+async function getDisciplinaryRule(id: string) {
+  const rule = await prisma.disciplinaryActionRule.findUnique({
     where: { id },
   })
 
   return rule
 }
 
-export default async function EditTardinessRulePage({
+export default async function EditDisciplinaryRulePage({
   params,
 }: {
   params: { id: string }
 }) {
-  const rule = await getTardinessRule(params.id)
+  const rule = await getDisciplinaryRule(params.id)
 
   if (!rule) {
     notFound()
@@ -37,13 +36,13 @@ export default async function EditTardinessRulePage({
       {/* Header */}
       <div className="flex items-center gap-4">
         <Button variant="outline" size="icon" asChild>
-          <Link href="/admin/tardiness-rules">
+          <Link href="/admin/disciplinary-rules">
             <ArrowLeft className="h-4 w-4" />
           </Link>
         </Button>
         <div className="space-y-2">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
-            Editar Regla de Tardanzas
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+            Editar Regla Disciplinaria
           </h1>
           <p className="text-lg text-muted-foreground">
             Modificar configuración de {rule.name}
@@ -52,7 +51,7 @@ export default async function EditTardinessRulePage({
       </div>
 
       {/* Formulario de edición (componente cliente) */}
-      <EditTardinessRuleForm rule={serializedRule} />
+      <EditDisciplinaryRuleForm rule={serializedRule} />
     </div>
   )
 }

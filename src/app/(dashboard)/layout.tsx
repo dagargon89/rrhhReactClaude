@@ -39,6 +39,15 @@ export default async function DashboardLayout({
             { title: "Asistencias", href: "/admin/attendance", icon: "UserCheck" },
           ]
         },
+        // Disciplina y Tardanzas
+        {
+          title: "Disciplina y Tardanzas",
+          items: [
+            { title: "Reglas de Tardanzas", href: "/admin/tardiness-rules", icon: "Clock" },
+            { title: "Acumulaciones Mensuales", href: "/admin/tardiness-accumulations", icon: "TrendingUp" },
+            { title: "Actas Disciplinarias", href: "/admin/disciplinary-records", icon: "ShieldAlert" },
+          ]
+        },
         // Permisos
         {
           title: "Permisos",
