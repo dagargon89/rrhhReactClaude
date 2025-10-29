@@ -38,6 +38,7 @@ export default function NewEmployeePage() {
     address: "",
     departmentId: "",
     positionId: "",
+    defaultShiftId: "",
     hireDate: "",
     employmentType: "FULL_TIME" as const,
     status: "ACTIVE" as const,
@@ -45,14 +46,16 @@ export default function NewEmployeePage() {
 
   const [departments, setDepartments] = useState<Department[]>([])
   const [positions, setPositions] = useState<Position[]>([])
+  const [workShifts, setWorkShifts] = useState<any[]>([])
 
-  // Cargar departamentos y posiciones al montar el componente
+  // Cargar departamentos, posiciones y turnos al montar el componente
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [deptRes, posRes] = await Promise.all([
+        const [deptRes, posRes, shiftsRes] = await Promise.all([
           fetch("/api/departments"),
-          fetch("/api/positions")
+          fetch("/api/positions"),
+          fetch("/api/work-shifts")
         ])
 
         if (deptRes.ok) {
@@ -66,9 +69,14 @@ export default function NewEmployeePage() {
           // La API ahora devuelve un array directamente
           setPositions(Array.isArray(posData) ? posData : posData.positions || [])
         }
+
+        if (shiftsRes.ok) {
+          const shiftsData = await shiftsRes.json()
+          setWorkShifts(Array.isArray(shiftsData) ? shiftsData : [])
+        }
       } catch (error) {
         console.error("Error loading data:", error)
-        toast.error("Error al cargar departamentos y posiciones")
+        toast.error("Error al cargar departamentos, posiciones y turnos")
       }
     }
 
@@ -99,6 +107,7 @@ export default function NewEmployeePage() {
           address: formData.address,
           departmentId: formData.departmentId || null,
           positionId: formData.positionId || null,
+          defaultShiftId: formData.defaultShiftId || null,
           hireDate: new Date(formData.hireDate),
           employmentType: formData.employmentType,
           status: formData.status,
@@ -311,6 +320,26 @@ export default function NewEmployeePage() {
                   ))}
                 </select>
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="defaultShiftId">Turno de Trabajo</Label>
+                <select
+                  id="defaultShiftId"
+                  name="defaultShiftId"
+                  value={formData.defaultShiftId}
+                  onChange={handleChange}
+                  className="w-full p-2 border border-gray-300 rounded-md"
+                >
+                  <option value="">Seleccionar turno</option>
+                  {workShifts.map((shift) => (
+                    <option key={shift.id} value={shift.id}>
+                      {shift.name} ({shift.code})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="employmentType">Tipo de Empleo</Label>
                 <select

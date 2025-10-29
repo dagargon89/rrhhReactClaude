@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Plus, Clock, CheckCircle2, AlertCircle, Timer } from "lucide-react"
 import Link from "next/link"
-import { AttendancesTableEnhanced } from "./components/AttendancesTableEnhanced"
+import { AttendanceViewTabs } from "./components/AttendanceViewTabs"
 
 // Forzar rendering dinámico
 export const dynamic = 'force-dynamic'
@@ -253,8 +253,8 @@ export default async function AttendancePage() {
         </div>
       </div>
 
-      {/* Tabla de asistencias con búsqueda y filtros */}
-      <AttendancesTableEnhanced attendances={attendances} />
+      {/* Vista de asistencias con tabs */}
+      <AttendanceViewTabs attendances={attendances} />
     </div>
   )
 }

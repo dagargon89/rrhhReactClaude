@@ -58,6 +58,13 @@ export async function GET(req: NextRequest) {
           },
           department: true,
           position: true,
+          defaultShift: {
+            select: {
+              id: true,
+              name: true,
+              code: true,
+            },
+          },
         },
         skip: (page - 1) * limit,
         take: limit,

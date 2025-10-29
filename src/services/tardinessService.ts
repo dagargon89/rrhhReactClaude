@@ -90,26 +90,33 @@ async function determineApplicableRule(
   minutesLate: number,
   currentFormalTardies: number
 ) {
-  // Llegadas tardías (1-15 minutos)
-  if (minutesLate >= 1 && minutesLate <= 15) {
-    if (currentFormalTardies > 0) {
-      // Ya tiene retardos este mes → usar regla estricta
-      // "Después del primer retardo, cualquier tardanza = retardo automático"
-      return await prisma.tardinessRule.findUnique({
-        where: { id: 'tr_post_first_tardiness' },
-      });
-    } else {
-      // Primer tardanza del mes → usar regla normal (4 llegadas)
-      return await prisma.tardinessRule.findUnique({
-        where: { id: 'tr_late_arrival_001' },
-      });
-    }
+  // Retardos directos (16+ minutos) - Mayor prioridad
+  if (minutesLate >= 16) {
+    return await prisma.tardinessRule.findFirst({
+      where: {
+        type: TardinessType.DIRECT_TARDINESS,
+        startMinutesLate: { lte: minutesLate },
+        endMinutesLate: minutesLate > 15 ? { gte: minutesLate } : null,
+        isActive: true,
+      },
+      orderBy: {
+        startMinutesLate: 'desc', // Obtener la regla más específica
+      },
+    });
   }
 
-  // Retardos directos (16+ minutos)
-  if (minutesLate >= 16) {
-    return await prisma.tardinessRule.findUnique({
-      where: { id: 'tr_direct_tardiness_001' },
+  // Llegadas tardías (1-15 minutos)
+  if (minutesLate >= 1 && minutesLate <= 15) {
+    return await prisma.tardinessRule.findFirst({
+      where: {
+        type: TardinessType.LATE_ARRIVAL,
+        startMinutesLate: { lte: minutesLate },
+        endMinutesLate: { gte: minutesLate },
+        isActive: true,
+      },
+      orderBy: {
+        startMinutesLate: 'desc',
+      },
     });
   }
 
@@ -138,26 +145,20 @@ async function applyTardinessRule(params: {
     'late_arrival';
 
   if (rule.type === TardinessType.LATE_ARRIVAL) {
-    if (ruleId === 'tr_post_first_tardiness') {
-      // Regla especial: después del primer retardo = retardo automático
-      formalTardiesIncrement = 1;
+    // Regla normal: acumular llegadas tardías
+    lateArrivalsIncrement = 1;
+    accumulationType = 'late_arrival';
+
+    // Verificar si se completó la acumulación (ej: 4 llegadas)
+    const newLateArrivalsCount =
+      accumulation.lateArrivalsCount + lateArrivalsIncrement;
+
+    if (newLateArrivalsCount >= rule.accumulationCount) {
+      // Se completó la acumulación → convertir a retardo formal
+      formalTardiesIncrement = rule.equivalentFormalTardies;
+      // Resetear contador de llegadas tardías
+      lateArrivalsIncrement = -accumulation.lateArrivalsCount;
       accumulationType = 'formal_tardy';
-    } else {
-      // Regla normal: acumular llegadas tardías
-      lateArrivalsIncrement = 1;
-      accumulationType = 'late_arrival';
-
-      // Verificar si se completó la acumulación (4 llegadas)
-      const newLateArrivalsCount =
-        accumulation.lateArrivalsCount + lateArrivalsIncrement;
-
-      if (newLateArrivalsCount >= rule.accumulationCount) {
-        // Se completó la acumulación → convertir a retardo formal
-        formalTardiesIncrement = rule.equivalentFormalTardies;
-        // Resetear contador de llegadas tardías
-        lateArrivalsIncrement = -accumulation.lateArrivalsCount;
-        accumulationType = 'formal_tardy';
-      }
     }
   } else if (rule.type === TardinessType.DIRECT_TARDINESS) {
     // Retardo directo = retardo formal inmediato
@@ -207,10 +208,10 @@ async function checkDisciplinaryTriggers(
   month: number,
   year: number
 ) {
-  // Buscar regla de acción disciplinaria para retardos formales
+  // Buscar regla de acción disciplinaria para tardanzas
   const rule = await prisma.disciplinaryActionRule.findFirst({
     where: {
-      triggerType: 'FORMAL_TARDIES',
+      triggerType: 'TARDINESS',
       triggerCount: { lte: formalTardiesCount },
       isActive: true,
     },

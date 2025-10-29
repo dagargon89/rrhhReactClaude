@@ -16,6 +16,7 @@ export const employeeSchema = z.object({
   address: z.string().optional().nullable(),
   departmentId: z.string().cuid().optional().nullable(),
   positionId: z.string().cuid().optional().nullable(),
+  defaultShiftId: z.string().cuid().optional().nullable(),
   hireDate: z.union([z.string().datetime(), z.date(), z.string().transform((val) => new Date(val))]),
   employmentType: z.enum(["FULL_TIME", "PART_TIME", "CONTRACT", "INTERN"]),
   status: z.enum(["ACTIVE", "INACTIVE", "ON_LEAVE", "TERMINATED"]).default("ACTIVE"),
@@ -38,6 +39,7 @@ export const updateEmployeeSchema = z.object({
   address: z.string().optional().nullable(),
   departmentId: z.string().cuid().optional().nullable(),
   positionId: z.string().cuid().optional().nullable(),
+  defaultShiftId: z.string().cuid().optional().nullable(),
   hireDate: z.union([
     z.string().datetime(),
     z.date(),

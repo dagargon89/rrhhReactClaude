@@ -29,6 +29,13 @@ export async function GET(
         },
         department: true,
         position: true,
+        defaultShift: {
+          select: {
+            id: true,
+            name: true,
+            code: true,
+          },
+        },
       },
     })
 
@@ -123,6 +130,13 @@ export async function PUT(
           },
           department: true,
           position: true,
+          defaultShift: {
+            select: {
+              id: true,
+              name: true,
+              code: true,
+            },
+          },
         },
       })
     })

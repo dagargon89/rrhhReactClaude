@@ -24,6 +24,13 @@ async function getEmployees() {
       },
       department: true,
       position: true,
+      defaultShift: {
+        select: {
+          id: true,
+          name: true,
+          code: true,
+        },
+      },
     },
     orderBy: {
       createdAt: "desc",

@@ -28,6 +28,7 @@ interface Employee {
   address: string | null
   departmentId: string | null
   positionId: string | null
+  defaultShiftId: string | null
   hireDate: string
   employmentType: string
   status: string
@@ -50,7 +51,8 @@ export default function EditEmployeePage({ params }: EditEmployeePageProps) {
   const [employee, setEmployee] = useState<Employee | null>(null)
   const [departments, setDepartments] = useState<Department[]>([])
   const [positions, setPositions] = useState<Position[]>([])
-  
+  const [workShifts, setWorkShifts] = useState<any[]>([])
+
   const [formData, setFormData] = useState({
     employeeCode: "",
     firstName: "",
@@ -60,6 +62,7 @@ export default function EditEmployeePage({ params }: EditEmployeePageProps) {
     address: "",
     departmentId: "",
     positionId: "",
+    defaultShiftId: "",
     hireDate: "",
     employmentType: "FULL_TIME",
     status: "ACTIVE",
@@ -71,12 +74,13 @@ export default function EditEmployeePage({ params }: EditEmployeePageProps) {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [employeeRes, deptRes, posRes] = await Promise.all([
+        const [employeeRes, deptRes, posRes, shiftsRes] = await Promise.all([
           fetch(`/api/employees/${params.id}`),
           fetch("/api/departments"),
-          fetch("/api/positions")
+          fetch("/api/positions"),
+          fetch("/api/work-shifts")
         ])
-        
+
         if (employeeRes.ok) {
           const employeeData = await employeeRes.json()
           setEmployee(employeeData)
@@ -89,6 +93,7 @@ export default function EditEmployeePage({ params }: EditEmployeePageProps) {
             address: employeeData.address || "",
             departmentId: employeeData.departmentId || "",
             positionId: employeeData.positionId || "",
+            defaultShiftId: employeeData.defaultShiftId || "",
             hireDate: new Date(employeeData.hireDate).toISOString().split('T')[0],
             employmentType: employeeData.employmentType,
             status: employeeData.status,
@@ -96,7 +101,7 @@ export default function EditEmployeePage({ params }: EditEmployeePageProps) {
             username: employeeData.user?.username || "",
           })
         }
-        
+
         if (deptRes.ok) {
           const deptData = await deptRes.json()
           // La API ahora devuelve un array directamente
@@ -108,6 +113,11 @@ export default function EditEmployeePage({ params }: EditEmployeePageProps) {
           // La API ahora devuelve un array directamente
           setPositions(Array.isArray(posData) ? posData : posData.positions || [])
         }
+
+        if (shiftsRes.ok) {
+          const shiftsData = await shiftsRes.json()
+          setWorkShifts(Array.isArray(shiftsData) ? shiftsData : [])
+        }
       } catch (error) {
         console.error("Error loading data:", error)
         toast.error("Error al cargar los datos")
@@ -115,7 +125,7 @@ export default function EditEmployeePage({ params }: EditEmployeePageProps) {
         setLoadingData(false)
       }
     }
-    
+
     loadData()
   }, [params.id])
 
@@ -134,6 +144,7 @@ export default function EditEmployeePage({ params }: EditEmployeePageProps) {
         address: formData.address || null,
         departmentId: formData.departmentId || null,
         positionId: formData.positionId || null,
+        defaultShiftId: formData.defaultShiftId || null,
         hireDate: formData.hireDate,
         employmentType: formData.employmentType,
         status: formData.status,
@@ -337,6 +348,26 @@ export default function EditEmployeePage({ params }: EditEmployeePageProps) {
                   ))}
                 </select>
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="defaultShiftId">Turno de Trabajo</Label>
+                <select
+                  id="defaultShiftId"
+                  name="defaultShiftId"
+                  value={formData.defaultShiftId}
+                  onChange={handleChange}
+                  className="w-full p-2 border border-gray-300 rounded-md"
+                >
+                  <option value="">Seleccionar turno</option>
+                  {workShifts.map((shift) => (
+                    <option key={shift.id} value={shift.id}>
+                      {shift.name} ({shift.code})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="employmentType">Tipo de Empleo</Label>
                 <select

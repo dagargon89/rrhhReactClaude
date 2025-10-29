@@ -37,7 +37,11 @@
       "Bash(npx prisma migrate dev:*)",
       "Bash(node migrate-work-shifts.js:*)",
       "Bash(node create-work-shift-periods.js:*)",
-      "Bash(timeout 120 npm run build:*)"
+      "Bash(timeout 120 npm run build:*)",
+      "Bash(timeout:*)",
+      "Bash(node check-user-employee.js:*)",
+      "Bash(node seed-complete-test-data.js:*)",
+      "Bash(node check-employees.js:*)"
     ],
     "deny": [],
     "ask": []

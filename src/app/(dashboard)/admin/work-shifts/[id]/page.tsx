@@ -21,41 +21,35 @@ async function getWorkShift(id: string) {
   const workShift = await prisma.workShift.findUnique({
     where: { id },
     include: {
-      schedules: {
-        include: {
-          employee: {
+      periods: {
+        orderBy: [
+          { dayOfWeek: "asc" },
+          { hourFrom: "asc" },
+        ],
+      },
+      employeesWithDefault: {
+        select: {
+          id: true,
+          employeeCode: true,
+          user: {
             select: {
-              id: true,
-              employeeCode: true,
-              user: {
-                select: {
-                  firstName: true,
-                  lastName: true,
-                },
-              },
+              firstName: true,
+              lastName: true,
             },
           },
         },
         take: 10,
-        orderBy: {
-          date: "desc",
-        },
       },
       _count: {
         select: {
-          schedules: true,
+          employeesWithDefault: true,
+          periods: true,
         },
       },
     },
   })
 
-  if (!workShift) return null
-
-  // Parsear workingHours de JSON string a objeto
-  return {
-    ...workShift,
-    workingHours: JSON.parse(workShift.workingHours),
-  }
+  return workShift
 }
 
 export default async function WorkShiftDetailPage({ params }: { params: { id: string } }) {
@@ -115,14 +109,6 @@ export default async function WorkShiftDetailPage({ params }: { params: { id: st
         ) : (
           <Badge className="bg-red-100 text-red-700 border-red-200">Inactivo</Badge>
         )}
-        {workShift.isFlexible ? (
-          <Badge className="bg-purple-100 text-purple-700 border-purple-200">
-            <ToggleLeft className="h-3 w-3 mr-1" />
-            Flexible
-          </Badge>
-        ) : (
-          <Badge variant="outline">Fijo</Badge>
-        )}
         {workShift.autoCheckoutEnabled && (
           <Badge className="bg-green-100 text-green-700 border-green-200">
             <Calendar className="h-3 w-3 mr-1" />
@@ -131,7 +117,11 @@ export default async function WorkShiftDetailPage({ params }: { params: { id: st
         )}
         <Badge variant="outline" className="flex items-center gap-1">
           <Users className="h-3 w-3" />
-          {workShift._count.schedules} horarios
+          {workShift._count.employeesWithDefault} empleados
+        </Badge>
+        <Badge variant="outline" className="flex items-center gap-1">
+          <Clock className="h-3 w-3" />
+          {workShift._count.periods} períodos
         </Badge>
       </div>
 
@@ -194,7 +184,11 @@ export default async function WorkShiftDetailPage({ params }: { params: { id: st
                 Promedio Diario
               </p>
               <p className="font-medium font-mono text-2xl">
-                {(Number(workShift.weeklyHours) / workShift.workingHours.filter((d: any) => d.enabled).length).toFixed(1)} hrs
+                {(() => {
+                  // Calcular días únicos
+                  const uniqueDays = new Set(workShift.periods.map(p => p.dayOfWeek)).size
+                  return uniqueDays > 0 ? (Number(workShift.weeklyHours) / uniqueDays).toFixed(1) : '0.0'
+                })()} hrs
               </p>
             </div>
             <div className="py-3 border-b">
@@ -224,27 +218,11 @@ export default async function WorkShiftDetailPage({ params }: { params: { id: st
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="py-3 border-b">
-              <p className="text-sm text-muted-foreground">Tipo de Turno</p>
-              {workShift.isFlexible ? (
-                <Badge className="bg-purple-100 text-purple-700 border-purple-200 mt-1">
-                  <ToggleLeft className="h-3 w-3 mr-1" />
-                  Flexible
-                </Badge>
-              ) : (
-                <Badge variant="outline" className="mt-1">Fijo</Badge>
-              )}
-            </div>
-            <div className="py-3 border-b">
               <p className="text-sm text-muted-foreground">Auto-Checkout</p>
               {workShift.autoCheckoutEnabled ? (
-                <div className="mt-1 space-y-1">
-                  <Badge className="bg-green-100 text-green-700 border-green-200">
-                    Habilitado
-                  </Badge>
-                  {workShift.autoCheckoutTime && (
-                    <p className="text-lg font-mono font-medium">{workShift.autoCheckoutTime}</p>
-                  )}
-                </div>
+                <Badge className="bg-green-100 text-green-700 border-green-200 mt-1">
+                  Habilitado
+                </Badge>
               ) : (
                 <Badge variant="outline" className="mt-1">Deshabilitado</Badge>
               )}
@@ -272,89 +250,120 @@ export default async function WorkShiftDetailPage({ params }: { params: { id: st
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {workShift.workingHours.map((day: any) => (
-                <div
-                  key={day.day}
-                  className={`flex items-center justify-between p-3 rounded-lg border ${
-                    day.enabled ? "bg-muted/30 border-blue-200" : "bg-muted/10 opacity-60"
-                  }`}
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-24">
-                      <Badge
-                        variant={day.enabled ? "default" : "outline"}
-                        className={day.enabled ? "bg-orange-100 text-orange-700 border-orange-200" : ""}
-                      >
-                        {DAYS_LABELS[day.day]}
-                      </Badge>
-                    </div>
-                    {day.enabled ? (
-                      <>
-                        <div className="flex items-center gap-2">
-                          <Clock className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-mono font-medium">
-                            {day.startTime} - {day.endTime}
-                          </span>
+              {(() => {
+                // Agrupar períodos por día
+                const periodsByDay: Record<number, typeof workShift.periods> = {}
+                workShift.periods.forEach(period => {
+                  if (!periodsByDay[period.dayOfWeek]) {
+                    periodsByDay[period.dayOfWeek] = []
+                  }
+                  periodsByDay[period.dayOfWeek].push(period)
+                })
+
+                // Crear array de todos los días (0-6)
+                return [0, 1, 2, 3, 4, 5, 6].map(dayNum => {
+                  const dayPeriods = periodsByDay[dayNum] || []
+                  const hasWork = dayPeriods.length > 0
+
+                  return (
+                    <div
+                      key={dayNum}
+                      className={`flex items-center justify-between p-3 rounded-lg border ${
+                        hasWork ? "bg-muted/30 border-blue-200" : "bg-muted/10 opacity-60"
+                      }`}
+                    >
+                      <div className="flex items-center gap-4 flex-1">
+                        <div className="w-24">
+                          <Badge
+                            variant={hasWork ? "default" : "outline"}
+                            className={hasWork ? "bg-orange-100 text-orange-700 border-orange-200" : ""}
+                          >
+                            {DAYS_LABELS[dayNum]}
+                          </Badge>
                         </div>
-                        <Badge variant="secondary" className="font-mono">
-                          {day.duration.toFixed(2)} hrs
-                        </Badge>
-                      </>
-                    ) : (
-                      <span className="text-sm text-muted-foreground">No laboral</span>
-                    )}
-                  </div>
-                </div>
-              ))}
+                        {hasWork ? (
+                          <div className="flex flex-wrap items-center gap-3 flex-1">
+                            {dayPeriods.map((period, idx) => {
+                              const hourFrom = Number(period.hourFrom)
+                              const hourTo = Number(period.hourTo)
+                              const startHour = Math.floor(hourFrom)
+                              const startMin = Math.round((hourFrom - startHour) * 60)
+                              const endHour = Math.floor(hourTo)
+                              const endMin = Math.round((hourTo - endHour) * 60)
+                              const duration = hourTo - hourFrom
+
+                              return (
+                                <div key={period.id} className="flex items-center gap-2">
+                                  <Clock className="h-4 w-4 text-muted-foreground" />
+                                  <span className="font-mono font-medium">
+                                    {`${startHour.toString().padStart(2, '0')}:${startMin.toString().padStart(2, '0')}`}
+                                    {" - "}
+                                    {`${endHour.toString().padStart(2, '0')}:${endMin.toString().padStart(2, '0')}`}
+                                  </span>
+                                  <Badge variant="secondary" className="font-mono text-xs">
+                                    {duration.toFixed(1)}h
+                                  </Badge>
+                                  {period.name && (
+                                    <span className="text-xs text-muted-foreground">({period.name})</span>
+                                  )}
+                                </div>
+                              )
+                            })}
+                          </div>
+                        ) : (
+                          <span className="text-sm text-muted-foreground">No laboral</span>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })
+              })()}
             </div>
             <p className="text-xs text-muted-foreground mt-3">
-              Este turno aplica para {workShift.workingHours.filter((d: any) => d.enabled).length} día
-              {workShift.workingHours.filter((d: any) => d.enabled).length !== 1 ? "s" : ""} de la semana
+              {(() => {
+                const uniqueDays = new Set(workShift.periods.map(p => p.dayOfWeek)).size
+                return `Este turno aplica para ${uniqueDays} día${uniqueDays !== 1 ? 's' : ''} de la semana con ${workShift.periods.length} período${workShift.periods.length !== 1 ? 's' : ''}`
+              })()}
             </p>
           </CardContent>
         </Card>
 
-        {/* Card 5: Horarios Asignados */}
+        {/* Card 5: Empleados Asignados */}
         <Card className="border-0 shadow-lg lg:col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5 text-blue-600" />
-              Horarios Asignados ({workShift._count.schedules})
+              Empleados Asignados ({workShift._count.employeesWithDefault})
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {workShift.schedules.length > 0 ? (
+            {workShift.employeesWithDefault.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {workShift.schedules.map((schedule) => (
+                {workShift.employeesWithDefault.map((employee) => (
                   <Link
-                    key={schedule.id}
-                    href={`/admin/employees/${schedule.employee.id}`}
-                    className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
+                    key={employee.id}
+                    href={`/admin/employees/${employee.id}`}
+                    className="flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors"
                   >
-                    <div className="flex items-center gap-3">
-                      <Users className="h-4 w-4 text-muted-foreground" />
-                      <div>
-                        <p className="font-medium text-sm">
-                          {schedule.employee.user.firstName} {schedule.employee.user.lastName}
-                        </p>
-                        <p className="text-xs text-muted-foreground font-mono">
-                          {schedule.employee.employeeCode}
-                        </p>
-                      </div>
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <p className="font-medium text-sm">
+                        {employee.user.firstName} {employee.user.lastName}
+                      </p>
+                      <p className="text-xs text-muted-foreground font-mono">
+                        {employee.employeeCode}
+                      </p>
                     </div>
-                    <Badge variant="outline" className="text-xs">
-                      {new Date(schedule.date).toLocaleDateString("es-ES", { day: "2-digit", month: "short" })}
-                    </Badge>
                   </Link>
                 ))}
-                {workShift._count.schedules > 10 && (
+                {workShift._count.employeesWithDefault > 10 && (
                   <div className="col-span-full text-center text-sm text-blue-600 py-2">
-                    Ver todos los {workShift._count.schedules} horarios
+                    +{workShift._count.employeesWithDefault - 10} empleados más
                   </div>
                 )}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">No hay horarios asignados a este turno</p>
+              <p className="text-sm text-muted-foreground">No hay empleados asignados a este turno</p>
             )}
           </CardContent>
         </Card>

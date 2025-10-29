@@ -53,6 +53,14 @@ export function AttendanceWidget() {
 
   // Cargar estado inicial
   useEffect(() => {
+    console.log('🔐 AttendanceWidget Session Debug:', {
+      hasSession: !!session,
+      hasUser: !!session?.user,
+      employeeId: session?.user?.employeeId,
+      userEmail: session?.user?.email,
+      userName: session?.user?.name,
+    })
+
     if (session?.user?.employeeId) {
       fetchStatus()
     }
@@ -161,8 +169,15 @@ export function AttendanceWidget() {
 
   // No mostrar nada si no es empleado
   if (!session?.user?.employeeId) {
+    console.log('❌ AttendanceWidget NOT showing: No employeeId in session')
     return null
   }
+
+  console.log('✅ AttendanceWidget conditions passed:', {
+    hasEmployeeId: true,
+    hasCheckedOut: !!status?.attendance?.checkOutTime,
+    hasCheckedIn: !!status?.attendance?.checkInTime,
+  })
 
   // Si ya hizo check-out, no mostrar nada
   if (status?.attendance?.checkOutTime) {

@@ -160,6 +160,29 @@ export function EmployeesTableEnhanced({ employees }: EmployeesTableEnhancedProp
         )
       },
     },
+    // Turno
+    {
+      accessorKey: "defaultShift",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Turno" />
+      ),
+      cell: ({ row }) => {
+        const employee = row.original
+        return employee.defaultShift ? (
+          <div className="flex items-center gap-2">
+            <Clock className="h-4 w-4 text-muted-foreground" />
+            <div className="flex flex-col">
+              <span className="text-sm font-medium">{employee.defaultShift.name}</span>
+              <Badge variant="outline" className="text-xs w-fit">
+                {employee.defaultShift.code}
+              </Badge>
+            </div>
+          </div>
+        ) : (
+          <span className="text-sm text-muted-foreground">Sin turno</span>
+        )
+      },
+    },
     // Tipo de empleo
     {
       accessorKey: "employmentType",
@@ -245,7 +268,9 @@ export function EmployeesTableEnhanced({ employees }: EmployeesTableEnhancedProp
         (employee.user?.lastName && employee.user.lastName.toLowerCase().includes(searchLower)) ||
         (employee.user?.email && employee.user.email.toLowerCase().includes(searchLower)) ||
         (employee.department?.name && employee.department.name.toLowerCase().includes(searchLower)) ||
-        (employee.position?.title && employee.position.title.toLowerCase().includes(searchLower))
+        (employee.position?.title && employee.position.title.toLowerCase().includes(searchLower)) ||
+        (employee.defaultShift?.name && employee.defaultShift.name.toLowerCase().includes(searchLower)) ||
+        (employee.defaultShift?.code && employee.defaultShift.code.toLowerCase().includes(searchLower))
 
       // Filtro de estado
       const matchesStatus =
@@ -320,7 +345,7 @@ export function EmployeesTableEnhanced({ employees }: EmployeesTableEnhancedProp
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Buscar por nombre, código, email..."
+                    placeholder="Buscar por nombre, código, email, turno..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-9"
