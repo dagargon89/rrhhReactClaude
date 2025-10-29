@@ -23,13 +23,6 @@ export async function GET(request: NextRequest) {
         },
         checkOutTime: null,
       },
-      include: {
-        schedule: {
-          include: {
-            shift: true,
-          },
-        },
-      },
       orderBy: {
         checkInTime: 'desc'
       }

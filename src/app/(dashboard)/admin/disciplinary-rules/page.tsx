@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Plus, Shield, AlertTriangle, Ban, FileWarning, Activity } from "lucide-react"
 import Link from "next/link"
-import { DisciplinaryRulesTable } from "./components/DisciplinaryRulesTable"
+import { DisciplinaryRulesTableEnhanced } from "./components/DisciplinaryRulesTableEnhanced"
 
 // Función Server-Side para obtener reglas disciplinarias
 async function getDisciplinaryRules() {
@@ -130,7 +130,7 @@ export default async function DisciplinaryRulesPage() {
       </div>
 
       {/* Tabla de reglas con búsqueda y filtros */}
-      <DisciplinaryRulesTable rules={serializedRules} />
+      <DisciplinaryRulesTableEnhanced rules={serializedRules} />
     </div>
   )
 }

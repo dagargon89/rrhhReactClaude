@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Plus, AlertTriangle, TrendingUp, TrendingDown, Activity } from "lucide-react"
 import Link from "next/link"
-import { IncidentsTable } from "./components/IncidentsTable"
+import { IncidentsTableEnhanced } from "./components/IncidentsTableEnhanced"
 import { startOfMonth, endOfMonth } from "date-fns"
 
 // Funci\u00f3n Server-Side para obtener datos
@@ -251,7 +251,7 @@ export default async function IncidentsPage() {
       </div>
 
       {/* Tabla de incidencias con b\u00fasqueda y filtros */}
-      <IncidentsTable incidents={serializedIncidents} />
+      <IncidentsTableEnhanced incidents={serializedIncidents} />
     </div>
   )
 }

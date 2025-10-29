@@ -28,16 +28,24 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Buscar horario del día
-    const schedule = await prisma.schedule.findFirst({
-      where: {
-        employeeId: validatedData.employeeId,
-        date: today,
-      },
+    // Obtener el turno del empleado
+    const employee = await prisma.employee.findUnique({
+      where: { id: validatedData.employeeId },
       include: {
-        shift: true,
+        defaultShift: {
+          include: {
+            periods: true,
+          },
+        },
       },
     })
+
+    if (!employee) {
+      return NextResponse.json(
+        { error: "Empleado no encontrado" },
+        { status: 404 }
+      )
+    }
 
     // Determinar status (PRESENT o LATE) y calcular minutos de retraso
     let status = "PRESENT"
@@ -45,36 +53,35 @@ export async function POST(request: NextRequest) {
     let scheduledStartTime: Date | null = null
     let tardinessResult = null
 
-    if (schedule?.shift) {
+    if (employee.defaultShift && employee.defaultShift.periods.length > 0) {
       const now = new Date()
-      let shiftStartTime: string
+      const dayOfWeek = now.getDay()
 
-      // Intentar obtener hora de inicio del workingHours JSON
-      if (schedule.shift.workingHours) {
-        try {
-          const workingHours = JSON.parse(schedule.shift.workingHours)
-          const dayOfWeek = now.getDay()
-          const dayConfig = workingHours.find((d: any) => d.day === dayOfWeek)
-          shiftStartTime = dayConfig?.startTime || schedule.shift.startTime
-        } catch {
-          shiftStartTime = schedule.shift.startTime
+      // Buscar el primer período del día actual
+      const todayPeriods = employee.defaultShift.periods
+        .filter(p => p.dayOfWeek === dayOfWeek)
+        .sort((a, b) => Number(a.hourFrom) - Number(b.hourFrom))
+
+      if (todayPeriods.length > 0) {
+        const firstPeriod = todayPeriods[0]
+
+        // Convertir hourFrom decimal a hora (ej: 9.5 -> 09:30)
+        const hourFromDecimal = Number(firstPeriod.hourFrom)
+        const shiftHour = Math.floor(hourFromDecimal)
+        const shiftMin = Math.round((hourFromDecimal - shiftHour) * 60)
+
+        const shiftStart = new Date(now)
+        shiftStart.setHours(shiftHour, shiftMin, 0, 0)
+        scheduledStartTime = shiftStart
+
+        // Agregar período de gracia
+        const graceEnd = new Date(shiftStart.getTime() + employee.defaultShift.gracePeriodMinutes * 60 * 1000)
+
+        if (now > graceEnd) {
+          status = "LATE"
+          // Calcular minutos de retraso (sin considerar período de gracia)
+          minutesLate = Math.floor((now.getTime() - shiftStart.getTime()) / (1000 * 60))
         }
-      } else {
-        shiftStartTime = schedule.shift.startTime
-      }
-
-      const [shiftHour, shiftMin] = shiftStartTime.split(":").map(Number)
-      const shiftStart = new Date(now)
-      shiftStart.setHours(shiftHour, shiftMin, 0, 0)
-      scheduledStartTime = shiftStart
-
-      // Agregar período de gracia
-      const graceEnd = new Date(shiftStart.getTime() + schedule.shift.gracePeriodMinutes * 60 * 1000)
-
-      if (now > graceEnd) {
-        status = "LATE"
-        // Calcular minutos de retraso (sin considerar período de gracia)
-        minutesLate = Math.floor((now.getTime() - shiftStart.getTime()) / (1000 * 60))
       }
     }
 
@@ -109,7 +116,6 @@ export async function POST(request: NextRequest) {
       attendance = await prisma.attendance.create({
         data: {
           employeeId: validatedData.employeeId,
-          scheduleId: schedule?.id,
           date: today,
           checkInTime: new Date(),
           checkInMethod: validatedData.checkInMethod,

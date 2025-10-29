@@ -34,19 +34,16 @@ export async function GET(
               },
             },
           },
-        },
-        schedule: {
-          select: {
-            id: true,
-            date: true,
-            shift: {
-              select: {
-                name: true,
-                code: true,
-                workingHours: true,
-              },
+          defaultShift: {
+            include: {
+              periods: true,
             },
           },
+        },
+      },
+      shiftOverride: {
+        include: {
+          periods: true,
         },
       },
     })
@@ -112,28 +109,22 @@ export async function PUT(
       const diffMs = checkOutTime.getTime() - checkInTime.getTime()
       workedHours = diffMs / (1000 * 60 * 60)
 
-      // Calcular horas extra si hay horario
-      if (existingAttendance.schedule?.shift) {
-        let expectedHours = 8 // Default
-        const shift = existingAttendance.schedule.shift
+      // Calcular horas extra basado en el turno
+      const shift = existingAttendance.shiftOverride || existingAttendance.employee.defaultShift
 
-        if (shift.workingHours) {
-          try {
-            const workingHours = JSON.parse(shift.workingHours)
-            const dayOfWeek = existingAttendance.date.getDay()
-            const dayConfig = workingHours.find((d: any) => d.day === dayOfWeek)
-            if (dayConfig?.enabled) {
-              expectedHours = dayConfig.duration
-            }
-          } catch (e) {
-            // Fallback a startTime/endTime
-            const [startHour, startMin] = shift.startTime.split(":").map(Number)
-            const [endHour, endMin] = shift.endTime.split(":").map(Number)
-            expectedHours = (endHour * 60 + endMin - startHour * 60 - startMin) / 60
-          }
+      if (shift && shift.periods && shift.periods.length > 0) {
+        const dayOfWeek = existingAttendance.date.getDay()
+        const todayPeriods = shift.periods.filter(p => p.dayOfWeek === dayOfWeek)
+
+        let expectedHours = 0
+        for (const period of todayPeriods) {
+          const periodHours = Number(period.hourTo) - Number(period.hourFrom)
+          expectedHours += periodHours
         }
 
-        overtimeHours = Math.max(0, workedHours - expectedHours)
+        if (expectedHours > 0) {
+          overtimeHours = Math.max(0, workedHours - expectedHours)
+        }
       }
     }
 

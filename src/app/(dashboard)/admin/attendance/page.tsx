@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Plus, Clock, CheckCircle2, AlertCircle, Timer } from "lucide-react"
 import Link from "next/link"
-import { AttendancesTable } from "./components/AttendancesTable"
+import { AttendancesTableEnhanced } from "./components/AttendancesTableEnhanced"
 
 // Forzar rendering dinámico
 export const dynamic = 'force-dynamic'
@@ -28,16 +28,18 @@ async function getAttendances() {
               name: true,
             },
           },
-        },
-      },
-      schedule: {
-        select: {
-          shift: {
+          defaultShift: {
             select: {
               name: true,
               code: true,
             },
           },
+        },
+      },
+      shiftOverride: {
+        select: {
+          name: true,
+          code: true,
         },
       },
     },
@@ -252,7 +254,7 @@ export default async function AttendancePage() {
       </div>
 
       {/* Tabla de asistencias con búsqueda y filtros */}
-      <AttendancesTable attendances={attendances} />
+      <AttendancesTableEnhanced attendances={attendances} />
     </div>
   )
 }

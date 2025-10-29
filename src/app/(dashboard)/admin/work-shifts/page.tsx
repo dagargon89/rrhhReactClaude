@@ -3,14 +3,21 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Plus, Clock, Calendar, ToggleLeft, Users } from "lucide-react"
 import Link from "next/link"
-import { WorkShiftsTable } from "./components/WorkShiftsTable"
+import { WorkShiftsTableEnhanced } from "./components/WorkShiftsTableEnhanced"
 
 async function getWorkShifts() {
   const workShifts = await prisma.workShift.findMany({
     include: {
+      periods: {
+        orderBy: [
+          { dayOfWeek: "asc" },
+          { hourFrom: "asc" },
+        ],
+      },
       _count: {
         select: {
-          schedules: true,
+          employeesWithDefault: true,
+          periods: true,
         },
       },
     },
@@ -28,15 +35,21 @@ export default async function WorkShiftsPage() {
   // Cálculo de estadísticas
   const totalShifts = workShifts.length
   const activeShifts = workShifts.filter(shift => shift.isActive).length
-  const flexibleShifts = workShifts.filter(shift => shift.isFlexible).length
+  const totalPeriods = workShifts.reduce((sum, shift) => sum + shift._count.periods, 0)
   const autoCheckoutShifts = workShifts.filter(shift => shift.autoCheckoutEnabled).length
-  const totalSchedules = workShifts.reduce((sum, shift) => sum + shift._count.schedules, 0)
+  const totalEmployees = workShifts.reduce((sum, shift) => sum + shift._count.employeesWithDefault, 0)
 
   // Serialización de datos para componentes cliente
   const serializedShifts = workShifts.map(shift => ({
     ...shift,
+    weeklyHours: shift.weeklyHours.toString(),
     createdAt: shift.createdAt.toISOString(),
     updatedAt: shift.updatedAt.toISOString(),
+    periods: shift.periods.map(period => ({
+      ...period,
+      hourFrom: period.hourFrom.toString(),
+      hourTo: period.hourTo.toString(),
+    })),
   }))
 
   return (
@@ -80,20 +93,20 @@ export default async function WorkShiftsPage() {
             </CardContent>
           </Card>
 
-          {/* Card: Turnos Flexibles */}
+          {/* Card: Períodos de Trabajo */}
           <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-50 to-purple-100/50">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
               <CardTitle className="text-sm font-semibold text-purple-700">
-                Turnos Flexibles
+                Períodos de Trabajo
               </CardTitle>
               <div className="p-2 bg-purple-100 rounded-lg">
                 <ToggleLeft className="h-4 w-4 text-purple-600" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-purple-900">{flexibleShifts}</div>
+              <div className="text-3xl font-bold text-purple-900">{totalPeriods}</div>
               <p className="text-xs text-purple-700 mt-1">
-                {((flexibleShifts / totalShifts) * 100).toFixed(1)}% del total
+                En todos los turnos
               </p>
             </CardContent>
           </Card>
@@ -116,20 +129,20 @@ export default async function WorkShiftsPage() {
             </CardContent>
           </Card>
 
-          {/* Card: Total Horarios */}
+          {/* Card: Empleados Asignados */}
           <Card className="border-0 shadow-lg bg-gradient-to-br from-orange-50 to-orange-100/50">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
               <CardTitle className="text-sm font-semibold text-orange-700">
-                Horarios Asignados
+                Empleados Asignados
               </CardTitle>
               <div className="p-2 bg-orange-100 rounded-lg">
                 <Users className="h-4 w-4 text-orange-600" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-orange-900">{totalSchedules}</div>
+              <div className="text-3xl font-bold text-orange-900">{totalEmployees}</div>
               <p className="text-xs text-orange-700 mt-1">
-                En todos los turnos
+                Con turno asignado
               </p>
             </CardContent>
           </Card>
@@ -137,7 +150,7 @@ export default async function WorkShiftsPage() {
       </div>
 
       {/* Tabla de turnos con búsqueda y filtros */}
-      <WorkShiftsTable workShifts={serializedShifts} />
+      <WorkShiftsTableEnhanced workShifts={serializedShifts} />
     </div>
   )
 }

@@ -31,7 +31,13 @@
       "Bash(taskkill:*)",
       "Bash(npx prisma studio)",
       "Bash(node check-attendance.js:*)",
-      "Bash(del:*)"
+      "Bash(del:*)",
+      "Bash(tail:*)",
+      "Bash(npx prisma format:*)",
+      "Bash(npx prisma migrate dev:*)",
+      "Bash(node migrate-work-shifts.js:*)",
+      "Bash(node create-work-shift-periods.js:*)",
+      "Bash(timeout 120 npm run build:*)"
     ],
     "deny": [],
     "ask": []

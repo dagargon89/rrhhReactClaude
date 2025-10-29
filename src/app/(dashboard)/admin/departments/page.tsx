@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Plus, Building2, Users, GitBranch, Briefcase } from "lucide-react"
 import Link from "next/link"
-import { DepartmentsTable } from "./components/DepartmentsTable"
+import { DepartmentsTableEnhanced } from "./components/DepartmentsTableEnhanced"
 
 async function getDepartments() {
   const departments = await prisma.department.findMany({
@@ -158,7 +158,7 @@ export default async function DepartmentsPage() {
       </div>
 
       {/* Tabla de departamentos con búsqueda y filtros */}
-      <DepartmentsTable departments={serializedDepartments} />
+      <DepartmentsTableEnhanced departments={serializedDepartments} />
     </div>
   )
 }

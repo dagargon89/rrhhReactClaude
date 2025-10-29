@@ -10,7 +10,7 @@ import {
   UserCheck
 } from "lucide-react"
 import Link from "next/link"
-import { UsersTable } from "./components/UsersTable"
+import { UsersTableEnhanced } from "./components/UsersTableEnhanced"
 
 async function getUsers() {
   const users = await prisma.user.findMany({
@@ -150,7 +150,7 @@ export default async function UsersPage() {
       </div>
 
       {/* Tabla de usuarios con búsqueda y filtros */}
-      <UsersTable users={serializedUsers} />
+      <UsersTableEnhanced users={serializedUsers} />
     </div>
   )
 }

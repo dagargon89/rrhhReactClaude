@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Plus, Wallet, Users, Calendar, TrendingUp } from "lucide-react"
 import Link from "next/link"
-import { LeaveBalancesTable } from "./components/LeaveBalancesTable"
+import { LeaveBalancesTableEnhanced } from "./components/LeaveBalancesTableEnhanced"
 
 async function getLeaveBalances() {
   const balances = await prisma.leaveBalance.findMany({
@@ -179,7 +179,7 @@ export default async function LeaveBalancesPage() {
       </div>
 
       {/* Tabla de saldos con búsqueda y filtros */}
-      <LeaveBalancesTable balances={serializedBalances} />
+      <LeaveBalancesTableEnhanced balances={serializedBalances} />
     </div>
   )
 }

@@ -35,7 +35,6 @@ export default async function DashboardLayout({
           title: "Tiempo y Asistencia",
           items: [
             { title: "Turnos", href: "/admin/work-shifts", icon: "Clock" },
-            { title: "Horarios", href: "/admin/schedules", icon: "Calendar" },
             { title: "Asistencias", href: "/admin/attendance", icon: "UserCheck" },
           ]
         },

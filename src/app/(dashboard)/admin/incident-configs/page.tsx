@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Plus, Settings, Shield, Bell, Calendar } from "lucide-react"
 import Link from "next/link"
-import { ConfigsTable } from "./components/ConfigsTable"
+import { IncidentConfigsTableEnhanced } from "./components/IncidentConfigsTableEnhanced"
 
 // Función Server-Side para obtener configuraciones
 async function getConfigs() {
@@ -147,7 +147,7 @@ export default async function IncidentConfigsPage() {
       </div>
 
       {/* Tabla de configuraciones */}
-      <ConfigsTable configs={serializedConfigs} />
+      <IncidentConfigsTableEnhanced configs={serializedConfigs} />
     </div>
   )
 }

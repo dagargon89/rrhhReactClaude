@@ -11,7 +11,7 @@ import {
   FileText,
 } from "lucide-react"
 import Link from "next/link"
-import { LeaveRequestsTable } from "./components/LeaveRequestsTable"
+import { LeaveRequestsTableEnhanced } from "./components/LeaveRequestsTableEnhanced"
 
 async function getLeaveRequests() {
   const leaveRequests = await prisma.leaveRequest.findMany({
@@ -199,7 +199,7 @@ export default async function LeavesPage() {
       </div>
 
       {/* Tabla de solicitudes con búsqueda y filtros */}
-      <LeaveRequestsTable leaveRequests={serializedRequests} />
+      <LeaveRequestsTableEnhanced leaveRequests={serializedRequests} />
     </div>
   )
 }

@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { FileText, AlertTriangle, CheckCircle2, Clock, XCircle } from "lucide-react"
-import { DisciplinaryRecordsTable } from "./components/DisciplinaryRecordsTable"
+import { DisciplinaryRecordsTableEnhanced } from "./components/DisciplinaryRecordsTableEnhanced"
 
 // Función Server-Side para obtener actas disciplinarias
 async function getDisciplinaryRecords() {
@@ -232,7 +232,7 @@ export default async function DisciplinaryRecordsPage() {
       </div>
 
       {/* Tabla de registros con búsqueda y filtros */}
-      <DisciplinaryRecordsTable records={serializedRecords} />
+      <DisciplinaryRecordsTableEnhanced records={serializedRecords} />
     </div>
   )
 }

@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Clock, AlertTriangle, TrendingUp, Users } from "lucide-react"
-import { TardinessAccumulationsTable } from "./components/TardinessAccumulationsTable"
+import { TardinessAccumulationsTableEnhanced } from "./components/TardinessAccumulationsTableEnhanced"
 
 // Función Server-Side para obtener acumulaciones
 async function getTardinessAccumulations(month?: number, year?: number) {
@@ -220,10 +220,8 @@ export default async function TardinessAccumulationsPage() {
       </div>
 
       {/* Tabla de acumulaciones con búsqueda y filtros */}
-      <TardinessAccumulationsTable
+      <TardinessAccumulationsTableEnhanced
         accumulations={serializedAccumulations}
-        month={currentMonth}
-        year={currentYear}
       />
     </div>
   )

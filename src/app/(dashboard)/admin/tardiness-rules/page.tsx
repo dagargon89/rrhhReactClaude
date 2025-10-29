@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Plus, Clock, AlertCircle, CheckCircle2, Activity } from "lucide-react"
 import Link from "next/link"
-import { TardinessRulesTable } from "./components/TardinessRulesTable"
+import { TardinessRulesTableEnhanced } from "./components/TardinessRulesTableEnhanced"
 
 // Función Server-Side para obtener reglas de tardanzas
 async function getTardinessRules() {
@@ -130,7 +130,7 @@ export default async function TardinessRulesPage() {
       </div>
 
       {/* Tabla de reglas con búsqueda y filtros */}
-      <TardinessRulesTable rules={serializedRules} />
+      <TardinessRulesTableEnhanced rules={serializedRules} />
     </div>
   )
 }

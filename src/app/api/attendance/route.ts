@@ -83,34 +83,29 @@ export async function POST(request: NextRequest) {
       const diffMs = checkOut.getTime() - checkIn.getTime()
       workedHours = diffMs / (1000 * 60 * 60) // Convertir a horas
 
-      // Si hay un horario asignado, calcular horas extra
-      if (validatedData.scheduleId) {
-        const schedule = await prisma.schedule.findUnique({
-          where: { id: validatedData.scheduleId },
-          include: {
-            shift: true,
+      // Calcular horas extra basado en el turno del empleado
+      const employee = await prisma.employee.findUnique({
+        where: { id: validatedData.employeeId },
+        include: {
+          defaultShift: {
+            include: {
+              periods: true,
+            },
           },
-        })
+        },
+      })
 
-        if (schedule?.shift) {
-          // Parsear workingHours si existe
-          let expectedHours = 8 // Default
-          if (schedule.shift.workingHours) {
-            try {
-              const workingHours = JSON.parse(schedule.shift.workingHours)
-              const dayOfWeek = new Date(validatedData.date).getDay()
-              const dayConfig = workingHours.find((d: any) => d.day === dayOfWeek)
-              if (dayConfig?.enabled) {
-                expectedHours = dayConfig.duration
-              }
-            } catch (e) {
-              // Si falla el parse, usar startTime y endTime antiguos
-              const [startHour, startMin] = schedule.shift.startTime.split(":").map(Number)
-              const [endHour, endMin] = schedule.shift.endTime.split(":").map(Number)
-              expectedHours = (endHour * 60 + endMin - startHour * 60 - startMin) / 60
-            }
-          }
+      if (employee?.defaultShift) {
+        const dayOfWeek = new Date(validatedData.date).getDay()
+        const todayPeriods = employee.defaultShift.periods.filter(p => p.dayOfWeek === dayOfWeek)
 
+        let expectedHours = 0
+        for (const period of todayPeriods) {
+          const periodHours = Number(period.hourTo) - Number(period.hourFrom)
+          expectedHours += periodHours
+        }
+
+        if (expectedHours > 0) {
           overtimeHours = Math.max(0, workedHours - expectedHours)
         }
       }
@@ -119,7 +114,6 @@ export async function POST(request: NextRequest) {
     const attendance = await prisma.attendance.create({
       data: {
         employeeId: validatedData.employeeId,
-        scheduleId: validatedData.scheduleId,
         date: new Date(validatedData.date),
         checkInTime: validatedData.checkInTime ? new Date(validatedData.checkInTime) : null,
         checkInMethod: validatedData.checkInMethod,

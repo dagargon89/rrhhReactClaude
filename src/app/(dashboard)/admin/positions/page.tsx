@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Plus, Briefcase, Users, Building2, TrendingUp } from "lucide-react"
 import Link from "next/link"
-import { PositionsTable } from "./components/PositionsTable"
+import { PositionsTableEnhanced } from "./components/PositionsTableEnhanced"
 
 async function getPositions() {
   const positions = await prisma.position.findMany({
@@ -154,7 +154,7 @@ export default async function PositionsPage() {
       </div>
 
       {/* Tabla de posiciones con búsqueda y filtros */}
-      <PositionsTable positions={serializedPositions} />
+      <PositionsTableEnhanced positions={serializedPositions} />
     </div>
   )
 }

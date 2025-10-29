@@ -38,11 +38,16 @@ async function getAttendance(id: string) {
           },
           department: true,
           position: true,
+          defaultShift: {
+            include: {
+              periods: true,
+            },
+          },
         },
       },
-      schedule: {
+      shiftOverride: {
         include: {
-          shift: true,
+          periods: true,
         },
       },
     },
@@ -202,10 +207,10 @@ export default async function AttendanceDetailPage({
             Auto Check-out
           </Badge>
         )}
-        {attendance.schedule && (
+        {(attendance.shiftOverride || attendance.employee.defaultShift) && (
           <Badge variant="outline">
             <Briefcase className="h-3 w-3 mr-1" />
-            Turno: {attendance.schedule.shift.name}
+            Turno: {(attendance.shiftOverride || attendance.employee.defaultShift)?.name}
           </Badge>
         )}
       </div>
@@ -467,64 +472,49 @@ export default async function AttendanceDetailPage({
         </Card>
 
         {/* Card 5: Información del Turno (si existe) */}
-        {attendance.schedule && (
-          <Card className="border-0 shadow-lg lg:col-span-2">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Briefcase className="h-5 w-5 text-indigo-600" />
-                Información del Turno
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Nombre del Turno</p>
-                  <p className="font-medium">{attendance.schedule.shift.name}</p>
-                </div>
-
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Código</p>
-                  <p className="font-medium font-mono">
-                    {attendance.schedule.shift.code}
-                  </p>
-                </div>
-
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Tipo</p>
-                  {attendance.schedule.shift.isFlexible ? (
-                    <Badge className="bg-blue-100 text-blue-700 border-blue-200">
-                      Flexible
-                    </Badge>
-                  ) : (
-                    <Badge variant="outline">Fijo</Badge>
+        {(() => {
+          const shift = attendance.shiftOverride || attendance.employee.defaultShift
+          return shift ? (
+            <Card className="border-0 shadow-lg lg:col-span-2">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Briefcase className="h-5 w-5 text-indigo-600" />
+                  Información del Turno
+                  {attendance.shiftOverride && (
+                    <Badge variant="secondary" className="ml-2">Override</Badge>
                   )}
-                </div>
-              </div>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">Nombre del Turno</p>
+                    <p className="font-medium">{shift.name}</p>
+                  </div>
 
-              {attendance.schedule.shift.gracePeriodMinutes > 0 && (
-                <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                  <p className="text-sm text-blue-800">
-                    Período de gracia: {attendance.schedule.shift.gracePeriodMinutes}{" "}
-                    minutos
-                  </p>
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">Código</p>
+                    <p className="font-medium font-mono">{shift.code}</p>
+                  </div>
                 </div>
-              )}
 
-              {attendance.schedule.notes && (
-                <div className="pt-2">
-                  <p className="text-sm text-muted-foreground mb-1">Notas del horario:</p>
-                  <p className="text-sm">{attendance.schedule.notes}</p>
-                </div>
-              )}
+                {shift.gracePeriodMinutes > 0 && (
+                  <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <p className="text-sm text-blue-800">
+                      Período de gracia: {shift.gracePeriodMinutes} minutos
+                    </p>
+                  </div>
+                )}
 
-              <Button variant="outline" asChild>
-                <Link href={`/admin/work-shifts/${attendance.schedule.shift.id}`}>
-                  Ver Detalles del Turno
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-        )}
+                <Button variant="outline" asChild>
+                  <Link href={`/admin/work-shifts/${shift.id}`}>
+                    Ver Detalles del Turno
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          ) : null
+        })()}
 
         {/* Card 6: Notas Adicionales (si existen) */}
         {attendance.notes && (

@@ -10,7 +10,7 @@ import {
   Briefcase
 } from "lucide-react"
 import Link from "next/link"
-import { EmployeesTable } from "./components/EmployeesTable"
+import { EmployeesTableEnhanced } from "./components/EmployeesTableEnhanced"
 
 async function getEmployees() {
   const employees = await prisma.employee.findMany({
@@ -150,7 +150,7 @@ export default async function EmployeesPage() {
       </div>
 
       {/* Tabla de empleados con búsqueda y filtros */}
-      <EmployeesTable employees={serializedEmployees} />
+      <EmployeesTableEnhanced employees={serializedEmployees} />
     </div>
   )
 }
