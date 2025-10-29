@@ -47,6 +47,16 @@ export async function POST(request: NextRequest) {
     const diffMs = checkOutTime.getTime() - attendance.checkInTime.getTime()
     const workedHours = diffMs / (1000 * 60 * 60)
 
+    console.log('⏱️ Hours calculation:', {
+      attendanceId: attendance.id,
+      checkInTime: attendance.checkInTime.toISOString(),
+      checkOutTime: checkOutTime.toISOString(),
+      diffMs,
+      diffMinutes: diffMs / (1000 * 60),
+      workedHours,
+      workedHoursRounded: Math.round(workedHours * 100) / 100,
+    })
+
     // Calcular horas extra
     let overtimeHours = 0
     if (attendance.schedule?.shift) {
