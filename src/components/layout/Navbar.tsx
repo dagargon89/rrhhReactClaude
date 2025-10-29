@@ -6,6 +6,7 @@ import { Building2, LogOut, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { getInitials } from "@/lib/utils"
+import { AttendanceWidget } from "./AttendanceWidget"
 
 export function Navbar() {
   const { data: session } = useSession()
@@ -19,7 +20,7 @@ export function Navbar() {
   return (
     <nav className="border-b bg-white dark:bg-gray-900">
       <div className="px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between">
+        <div className="flex h-auto min-h-16 items-center justify-between py-2">
           <div className="flex items-center gap-3">
             <div className="bg-primary p-2 rounded-lg">
               <Building2 className="h-6 w-6 text-primary-foreground" />
@@ -33,6 +34,7 @@ export function Navbar() {
           </div>
 
           <div className="flex items-center gap-4">
+            <AttendanceWidget />
             <div className="text-right hidden sm:block">
               <p className="text-sm font-medium">{session?.user?.name}</p>
               <p className="text-xs text-muted-foreground">

@@ -132,6 +132,14 @@ export async function POST(request: NextRequest) {
       })
     }
 
+    console.log('✅ Check-in saved:', {
+      attendanceId: attendance.id,
+      employeeId: attendance.employeeId,
+      date: attendance.date.toISOString(),
+      checkInTime: attendance.checkInTime?.toISOString(),
+      status: attendance.status,
+    })
+
     // Procesar tardanza si aplica (después del check-in exitoso)
     if (minutesLate > 0 && scheduledStartTime) {
       try {
