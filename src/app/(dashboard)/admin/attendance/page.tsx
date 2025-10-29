@@ -6,6 +6,10 @@ import { Plus, Clock, CheckCircle2, AlertCircle, Timer } from "lucide-react"
 import Link from "next/link"
 import { AttendancesTable } from "./components/AttendancesTable"
 
+// Forzar rendering dinámico
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 async function getAttendances() {
   const attendances = await prisma.attendance.findMany({
     include: {
@@ -47,26 +51,90 @@ async function getAttendances() {
 }
 
 async function getStats() {
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
+  console.log('========================================')
+  console.log('🚀 GETSTATS FUNCTION CALLED!')
+  console.log('========================================')
+
+  // Crear rango de fechas para hoy (en UTC)
+  const now = new Date()
+  // Usar UTC para crear las fechas de inicio y fin del día
+  const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
+  const tomorrow = new Date(today)
+  tomorrow.setUTCDate(tomorrow.getUTCDate() + 1)
+
+  console.log('📊 Getting stats for date range:', {
+    now: now.toISOString(),
+    today: today.toISOString(),
+    tomorrow: tomorrow.toISOString(),
+  })
+
+  // Primero veamos todos los registros sin filtro de fecha
+  const allRecords = await prisma.attendance.findMany({
+    select: {
+      id: true,
+      date: true,
+      status: true,
+      workedHours: true,
+    },
+    take: 10,
+    orderBy: {
+      date: 'desc'
+    }
+  })
+
+  console.log('📋 Sample attendance records:', allRecords.map(r => ({
+    id: r.id,
+    date: r.date.toISOString(),
+    status: r.status,
+    workedHours: Number(r.workedHours),
+  })))
 
   const [totalToday, presentToday, lateToday, avgWorkedHours] = await Promise.all([
     prisma.attendance.count({
-      where: { date: today },
+      where: {
+        date: {
+          gte: today,
+          lt: tomorrow,
+        }
+      },
     }),
     prisma.attendance.count({
-      where: { date: today, status: "PRESENT" },
+      where: {
+        date: {
+          gte: today,
+          lt: tomorrow,
+        },
+        status: "PRESENT"
+      },
     }),
     prisma.attendance.count({
-      where: { date: today, status: "LATE" },
+      where: {
+        date: {
+          gte: today,
+          lt: tomorrow,
+        },
+        status: "LATE"
+      },
     }),
     prisma.attendance.aggregate({
-      where: { date: today },
+      where: {
+        date: {
+          gte: today,
+          lt: tomorrow,
+        }
+      },
       _avg: {
         workedHours: true,
       },
     }),
   ])
+
+  console.log('📈 Stats results:', {
+    totalToday,
+    presentToday,
+    lateToday,
+    avgWorkedHours: avgWorkedHours._avg.workedHours,
+  })
 
   return {
     totalToday,

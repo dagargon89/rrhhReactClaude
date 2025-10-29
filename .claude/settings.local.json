@@ -24,7 +24,14 @@
       "Bash(fi)",
       "Bash(npm run build:*)",
       "Bash(for file in \"src/app/api/leave-balances/[id]/route.ts\" \"src/app/api/leave-balances/route.ts\" \"src/app/api/leave-requests/[id]/review/route.ts\" \"src/app/api/leave-requests/route.ts\" \"src/app/api/leave-types/[id]/route.ts\" \"src/app/api/leave-types/route.ts\")",
-      "Bash(do echo \"Updating $file\")"
+      "Bash(do echo \"Updating $file\")",
+      "Bash(npm run dev:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(taskkill:*)",
+      "Bash(npx prisma studio)",
+      "Bash(node check-attendance.js:*)",
+      "Bash(del:*)"
     ],
     "deny": [],
     "ask": []
