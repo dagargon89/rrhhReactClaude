@@ -73,14 +73,14 @@ export class IncidentCalculationService {
           departmentId,
           date: endDate,
           value: turnoverRate,
-          metadata: {
+          metadata: JSON.stringify({
             terminated: terminatedEmployees.length,
             active: activeEmployees,
             period: {
               start: startDate.toISOString(),
               end: endDate.toISOString(),
             },
-          },
+          }),
           notes: `Rotación calculada automáticamente para el período`,
         },
       })
@@ -109,14 +109,14 @@ export class IncidentCalculationService {
               departmentId: dept.id,
               date: endDate,
               value: deptRate,
-              metadata: {
+              metadata: JSON.stringify({
                 terminated: deptTerminated.length,
                 active: deptActive,
                 period: {
                   start: startDate.toISOString(),
                   end: endDate.toISOString(),
                 },
-              },
+              }),
               notes: `Rotación calculada automáticamente para el departamento ${dept.name}`,
             },
           })
@@ -186,7 +186,7 @@ export class IncidentCalculationService {
         departmentId: departmentId || null,
         date: endDate,
         value: absenteeismRate,
-        metadata: {
+        metadata: JSON.stringify({
           absentDays,
           totalWorkDays,
           employees: totalEmployees,
@@ -195,7 +195,7 @@ export class IncidentCalculationService {
             start: startDate.toISOString(),
             end: endDate.toISOString(),
           },
-        },
+        }),
         notes: `Ausentismo calculado automáticamente para el período`,
       },
     })
@@ -259,7 +259,7 @@ export class IncidentCalculationService {
         departmentId: departmentId || null,
         date: endDate,
         value: tardinessRate,
-        metadata: {
+        metadata: JSON.stringify({
           lateArrivals,
           totalWorkDays,
           employees: totalEmployees,
@@ -268,7 +268,7 @@ export class IncidentCalculationService {
             start: startDate.toISOString(),
             end: endDate.toISOString(),
           },
-        },
+        }),
         notes: `Impuntualidad calculada automáticamente para el período`,
       },
     })
@@ -336,7 +336,7 @@ export class IncidentCalculationService {
         departmentId: departmentId || null,
         date: endDate,
         value: totalOvertimeHours,
-        metadata: {
+        metadata: JSON.stringify({
           totalHours: totalOvertimeHours,
           averagePerEmployee: averageOvertimePerEmployee,
           employees: totalEmployees,
@@ -345,7 +345,7 @@ export class IncidentCalculationService {
             start: startDate.toISOString(),
             end: endDate.toISOString(),
           },
-        },
+        }),
         notes: `Horas extra calculadas automáticamente para el período`,
       },
     })
