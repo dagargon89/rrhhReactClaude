@@ -4,9 +4,16 @@ import { useEffect, useState } from "react"
 import { useSession } from "next-auth/react"
 import { Clock, LogIn, LogOut, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import { toast } from "sonner"
-import { format, formatDistanceToNow } from "date-fns"
+import { format } from "date-fns"
 import { es } from "date-fns/locale"
 
 interface AttendanceStatus {
@@ -24,6 +31,7 @@ export function AttendanceWidget() {
   const [status, setStatus] = useState<AttendanceStatus | null>(null)
   const [loading, setLoading] = useState(false)
   const [elapsedTime, setElapsedTime] = useState("")
+  const [open, setOpen] = useState(false)
 
   // Función para cargar el estado de asistencia
   const fetchStatus = async () => {
@@ -36,13 +44,6 @@ export function AttendanceWidget() {
       })
       if (response.ok) {
         const data = await response.json()
-        console.log('✅ Status fetched:', {
-          hasAttendance: data.hasAttendance,
-          attendanceId: data.attendance?.id,
-          checkInTime: data.attendance?.checkInTime,
-          checkOutTime: data.attendance?.checkOutTime,
-          status: data.attendance?.status
-        })
         setStatus(data)
       }
     } catch (error) {
@@ -56,18 +57,6 @@ export function AttendanceWidget() {
       fetchStatus()
     }
   }, [session])
-
-  // Debug: Log cuando cambia el status
-  useEffect(() => {
-    console.log('🔄 Status changed:', {
-      status,
-      hasAttendance: status?.hasAttendance,
-      hasCheckIn: !!status?.attendance?.checkInTime,
-      checkInTime: status?.attendance?.checkInTime,
-      hasCheckOut: !!status?.attendance?.checkOutTime,
-      checkOutTime: status?.attendance?.checkOutTime
-    })
-  }, [status])
 
   // Actualizar tiempo transcurrido cada segundo
   useEffect(() => {
@@ -111,7 +100,6 @@ export function AttendanceWidget() {
 
       if (response.ok) {
         const data = await response.json()
-        console.log('✅ Check-in response:', data)
         toast.success("Entrada registrada exitosamente")
 
         // Mostrar información de tardanza si aplica
@@ -124,6 +112,7 @@ export function AttendanceWidget() {
         // Esperar un momento antes de actualizar el estado
         await new Promise(resolve => setTimeout(resolve, 500))
         await fetchStatus()
+        setOpen(false) // Cerrar el dialog
       } else {
         const error = await response.json()
         toast.error(error.error || "Error al registrar entrada")
@@ -152,13 +141,12 @@ export function AttendanceWidget() {
       })
 
       if (response.ok) {
-        const data = await response.json()
-        console.log('✅ Check-out response:', data)
         toast.success("Salida registrada exitosamente")
 
         // Esperar un momento antes de actualizar el estado
         await new Promise(resolve => setTimeout(resolve, 500))
         await fetchStatus()
+        setOpen(false) // Cerrar el dialog
       } else {
         const error = await response.json()
         toast.error(error.error || "Error al registrar salida")
@@ -181,69 +169,100 @@ export function AttendanceWidget() {
     return null
   }
 
-  // Log para debug antes del render
-  console.log('🎨 Rendering widget:', {
-    hasCheckInTime: !!status?.attendance?.checkInTime,
-    checkInTimeValue: status?.attendance?.checkInTime,
-    willShowCheckOut: !!status?.attendance?.checkInTime
-  })
+  // Determinar el color y el icono del botón
+  const hasCheckedIn = !!status?.attendance?.checkInTime
+  const buttonColor = hasCheckedIn
+    ? "bg-orange-500 hover:bg-orange-600"
+    : "bg-green-600 hover:bg-green-700"
 
-  // Mostrar widget compacto
   return (
-    <Card className="shadow-sm border-l-4 border-l-primary">
-      <CardContent className="p-3">
-        {status?.attendance?.checkInTime ? (
-          // Ya hizo check-in, mostrar tiempo y botón de salida
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Clock className="h-3 w-3" />
-              <span>
-                Desde {format(new Date(status.attendance.checkInTime), "h:mm a", { locale: es })}
-              </span>
-            </div>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button
+          className={`${buttonColor} text-white shadow-md`}
+          size="sm"
+        >
+          <Clock className="h-4 w-4 mr-2" />
+          {hasCheckedIn ? "En trabajo" : "Sin marcar"}
+        </Button>
+      </DialogTrigger>
 
-            <div className="text-2xl font-bold tabular-nums">
-              {elapsedTime}
-            </div>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Clock className="h-5 w-5" />
+            Registro de Asistencia
+          </DialogTitle>
+          <DialogDescription>
+            {hasCheckedIn
+              ? "Ya has marcado tu entrada. Puedes registrar tu salida cuando termines."
+              : "Marca tu entrada para comenzar a registrar tu jornada laboral."}
+          </DialogDescription>
+        </DialogHeader>
 
-            <Button
-              onClick={handleCheckOut}
-              disabled={loading}
-              className="w-full bg-orange-500 hover:bg-orange-600 text-white"
-              size="sm"
-            >
-              {loading ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              ) : (
-                <LogOut className="h-4 w-4 mr-2" />
-              )}
-              Registrar salida
-            </Button>
-          </div>
-        ) : (
-          // No ha hecho check-in, mostrar botón de entrada
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-sm font-medium">
-              <Clock className="h-4 w-4" />
-              <span>Asistencia</span>
-            </div>
+        <div className="space-y-4 py-4">
+          {hasCheckedIn ? (
+            // Ya hizo check-in - Mostrar información y botón de salida
+            <>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                  <span className="text-sm text-muted-foreground">Hora de entrada</span>
+                  <span className="font-mono font-semibold">
+                    {format(new Date(status.attendance!.checkInTime!), "h:mm a", { locale: es })}
+                  </span>
+                </div>
 
-            <Button
-              onClick={handleCheckIn}
-              disabled={loading}
-              className="w-full bg-green-600 hover:bg-green-700 text-white"
-              size="sm"
-            >
-              {loading ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              ) : (
-                <LogIn className="h-4 w-4 mr-2" />
-              )}
-              Registrar entrada
-            </Button>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+                <div className="flex items-center justify-between p-3 bg-primary/10 rounded-lg">
+                  <span className="text-sm text-muted-foreground">Tiempo transcurrido</span>
+                  <span className="text-2xl font-bold tabular-nums text-primary">
+                    {elapsedTime || "00:00:00"}
+                  </span>
+                </div>
+              </div>
+
+              <Button
+                onClick={handleCheckOut}
+                disabled={loading}
+                className="w-full bg-orange-500 hover:bg-orange-600 text-white"
+                size="lg"
+              >
+                {loading ? (
+                  <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                ) : (
+                  <LogOut className="h-5 w-5 mr-2" />
+                )}
+                Registrar salida
+              </Button>
+            </>
+          ) : (
+            // No ha hecho check-in - Mostrar botón de entrada
+            <>
+              <div className="text-center py-6">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 mb-4">
+                  <LogIn className="h-8 w-8 text-green-600" />
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Presiona el botón para registrar tu hora de entrada
+                </p>
+              </div>
+
+              <Button
+                onClick={handleCheckIn}
+                disabled={loading}
+                className="w-full bg-green-600 hover:bg-green-700 text-white"
+                size="lg"
+              >
+                {loading ? (
+                  <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                ) : (
+                  <LogIn className="h-5 w-5 mr-2" />
+                )}
+                Registrar entrada
+              </Button>
+            </>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 }
