@@ -258,7 +258,7 @@ async function checkDisciplinaryTriggers(
   // Actualizar contador de actas en acumulación
   await prisma.tardinessAccumulation.update({
     where: {
-      unique_employee_year_month: {
+      employeeId_year_month: {
         employeeId,
         year,
         month,
@@ -343,7 +343,7 @@ async function getOrCreateAccumulation(
 ) {
   return await prisma.tardinessAccumulation.upsert({
     where: {
-      unique_employee_year_month: {
+      employeeId_year_month: {
         employeeId,
         year,
         month,
@@ -372,7 +372,7 @@ export async function getMonthlyTardinessStats(
 ) {
   const accumulation = await prisma.tardinessAccumulation.findUnique({
     where: {
-      unique_employee_year_month: {
+      employeeId_year_month: {
         employeeId,
         year,
         month,
