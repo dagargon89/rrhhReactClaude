@@ -53,8 +53,8 @@ async function getEmployeeAttendance(employeeId: string) {
   ])
 
   // Calcular estadísticas
-  const onTime = attendances.filter(a => a.status === 'PRESENT' && !a.isLate).length
-  const late = attendances.filter(a => a.isLate).length
+  const onTime = attendances.filter(a => a.status === 'PRESENT').length
+  const late = 0 // Las tardanzas se manejan en otro módulo
   const absent = attendances.filter(a => a.status === 'ABSENT').length
 
   return {
@@ -77,14 +77,14 @@ export default async function MyAttendancePage() {
 
   const { attendances, stats } = await getEmployeeAttendance(session.user.employeeId)
 
-  const getStatusBadge = (status: string, isLate: boolean) => {
+  const getStatusBadge = (status: string) => {
     if (status === 'ABSENT') {
       return <Badge variant="destructive">Ausente</Badge>
     }
-    if (isLate) {
-      return <Badge variant="outline" className="border-yellow-500 text-yellow-700">Tardanza</Badge>
+    if (status === 'PRESENT') {
+      return <Badge variant="outline" className="border-green-500 text-green-700">Presente</Badge>
     }
-    return <Badge variant="outline" className="border-green-500 text-green-700">A Tiempo</Badge>
+    return <Badge variant="outline">{status}</Badge>
   }
 
   const formatTime = (date: Date | null) => {
@@ -178,7 +178,7 @@ export default async function MyAttendancePage() {
                       <p className="font-medium">
                         {format(new Date(attendance.date), "EEEE, d 'de' MMMM 'de' yyyy", { locale: es })}
                       </p>
-                      {getStatusBadge(attendance.status, attendance.isLate)}
+                      {getStatusBadge(attendance.status)}
                     </div>
                     {attendance.shiftOverride && (
                       <p className="text-sm text-muted-foreground">
@@ -192,7 +192,7 @@ export default async function MyAttendancePage() {
                       <Clock className="h-4 w-4 text-muted-foreground" />
                       <div>
                         <p className="text-muted-foreground">Entrada</p>
-                        <p className="font-medium">{formatTime(attendance.checkIn)}</p>
+                        <p className="font-medium">{formatTime(attendance.checkInTime)}</p>
                       </div>
                     </div>
 
@@ -200,7 +200,7 @@ export default async function MyAttendancePage() {
                       <Clock className="h-4 w-4 text-muted-foreground" />
                       <div>
                         <p className="text-muted-foreground">Salida</p>
-                        <p className="font-medium">{formatTime(attendance.checkOut)}</p>
+                        <p className="font-medium">{formatTime(attendance.checkOutTime)}</p>
                       </div>
                     </div>
 
@@ -209,7 +209,7 @@ export default async function MyAttendancePage() {
                       <div>
                         <p className="text-muted-foreground">Horas</p>
                         <p className="font-medium">
-                          {calculateWorkHours(attendance.checkIn, attendance.checkOut)}
+                          {calculateWorkHours(attendance.checkInTime, attendance.checkOutTime)}
                         </p>
                       </div>
                     </div>
