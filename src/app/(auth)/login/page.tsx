@@ -1,12 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { signIn } from "next-auth/react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
-import { Building2, Eye, EyeOff, Loader2, Shield, Users, Clock } from "lucide-react"
+import { Building2, Eye, EyeOff, Loader2, Shield, Users, Clock, AlertCircle } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -19,8 +19,10 @@ import { loginSchema, type LoginFormData } from "@/lib/validations/auth"
 
 export default function LoginPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [showInactivityAlert, setShowInactivityAlert] = useState(false)
 
   const {
     register,
@@ -29,6 +31,17 @@ export default function LoginPage() {
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
   })
+
+  useEffect(() => {
+    const reason = searchParams.get('reason')
+    if (reason === 'inactivity') {
+      setShowInactivityAlert(true)
+      toast.error("Sesión cerrada", {
+        description: "Tu sesión fue cerrada por inactividad. Por favor, inicia sesión nuevamente.",
+        duration: 5000,
+      })
+    }
+  }, [searchParams])
 
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true)
@@ -77,6 +90,16 @@ export default function LoginPage() {
         </div>
       </div>
 
+      {/* Alert de sesión cerrada por inactividad */}
+      {showInactivityAlert && (
+        <Alert variant="destructive" className="border-red-200 bg-red-50">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription className="text-red-800">
+            Tu sesión fue cerrada por inactividad. Por favor, inicia sesión nuevamente.
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Card principal del login */}
       <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
         <CardHeader className="space-y-4 pb-6">
@@ -87,7 +110,7 @@ export default function LoginPage() {
             </CardDescription>
           </div>
         </CardHeader>
-        
+
         <CardContent className="space-y-6">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             <div className="space-y-2">

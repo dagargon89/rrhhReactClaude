@@ -55,17 +55,26 @@ src/
 
 ## 🎯 Funcionalidades Clave
 
-### 1. Auto Check-out
+### 1. Gestión de Sesiones
+Sistema avanzado de gestión de sesiones con:
+- **Cierre automático por inactividad:** La sesión se cierra después de 60 minutos de inactividad (configurable)
+- **Advertencia antes del cierre:** Modal de advertencia 5 minutos antes del cierre automático
+- **Cierre al cerrar navegador:** Las cookies de sesión se eliminan al cerrar el navegador
+- **Tiempo máximo de sesión:** Sesiones limitadas a 1 hora independiente de actividad
+
+Para más detalles, consulta la [documentación de gestión de sesiones](./docs/SESSION_MANAGEMENT.md).
+
+### 2. Auto Check-out
 Sistema automático que registra la salida de empleados al final del turno.
 
-### 2. Cálculo de Incidencias
+### 3. Cálculo de Incidencias
 Procesamiento automático de:
 - Tardanzas
 - Ausencias
 - Rotación de personal
 - Métricas de productividad
 
-### 3. Flujo de Aprobación de Vacaciones
+### 4. Flujo de Aprobación de Vacaciones
 Sistema de aprobación con notificaciones automáticas.
 
 ## 🚀 Comandos Importantes
@@ -128,6 +137,10 @@ DATABASE_URL="postgresql://postgres:postgres@localhost:5432/hrms_db?schema=publi
 # NextAuth
 NEXTAUTH_URL="http://localhost:3000"
 NEXTAUTH_SECRET="your-secret-key-here"
+
+# Session Configuration
+NEXT_PUBLIC_SESSION_TIMEOUT_MINUTES="60"
+NEXT_PUBLIC_SESSION_WARNING_MINUTES="5"
 
 # Redis
 REDIS_URL="redis://localhost:6379"

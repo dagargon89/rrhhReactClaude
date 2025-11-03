@@ -8,6 +8,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma) as any,
   session: {
     strategy: "jwt",
+    maxAge: 60 * 60, // 1 hora de sesión máxima
+  },
+  cookies: {
+    sessionToken: {
+      name: `next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+        // No establecer maxAge para que la cookie sea de sesión (se elimina al cerrar navegador)
+      },
+    },
   },
   pages: {
     signIn: "/login",
@@ -63,11 +76,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
       if (user) {
         token.isStaff = user.isStaff
         token.isSuperuser = user.isSuperuser
         token.employeeId = user.employeeId
+      }
+      // Actualizar timestamp de última actividad
+      if (trigger === 'update') {
+        token.lastActivity = Date.now()
+      } else if (!token.lastActivity) {
+        token.lastActivity = Date.now()
       }
       return token
     },

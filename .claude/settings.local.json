@@ -41,7 +41,8 @@
       "Bash(timeout:*)",
       "Bash(node check-user-employee.js:*)",
       "Bash(node seed-complete-test-data.js:*)",
-      "Bash(node check-employees.js:*)"
+      "Bash(node check-employees.js:*)",
+      "Bash(npx tsc:*)"
     ],
     "deny": [],
     "ask": []
