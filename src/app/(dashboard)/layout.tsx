@@ -1,5 +1,6 @@
 import { Navbar } from "@/components/layout/Navbar"
 import { Sidebar } from "@/components/layout/Sidebar"
+import { MobileSidebar } from "@/components/layout/MobileSidebar"
 import { Separator } from "@/components/ui/separator"
 import { auth } from "@/lib/auth"
 
@@ -85,7 +86,7 @@ export default async function DashboardLayout({
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20">
       {/* Header */}
       <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200/60">
-        <Navbar />
+        <Navbar mobileMenu={<MobileSidebar sections={navSections} />} />
       </div>
       
       {/* Layout principal */}

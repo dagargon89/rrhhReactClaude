@@ -8,7 +8,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { getInitials } from "@/lib/utils"
 import { AttendanceWidget } from "./AttendanceWidget"
 
-export function Navbar() {
+interface NavbarProps {
+  mobileMenu?: React.ReactNode
+}
+
+export function Navbar({ mobileMenu }: NavbarProps) {
   const { data: session } = useSession()
   const router = useRouter()
 
@@ -22,6 +26,7 @@ export function Navbar() {
       <div className="px-4 sm:px-6 lg:px-8">
         <div className="flex h-auto min-h-16 items-center justify-between py-2">
           <div className="flex items-center gap-3">
+            {mobileMenu && <div className="lg:hidden">{mobileMenu}</div>}
             <div className="bg-primary p-2 rounded-lg">
               <Building2 className="h-6 w-6 text-primary-foreground" />
             </div>
