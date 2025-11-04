@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { checkOutSchema } from "@/lib/validations/attendance"
 import { z } from "zod"
+
+// Schema de validación para check-out
+const checkOutSchema = z.object({
+  employeeId: z.string().cuid(),
+  checkOutMethod: z.enum(["MANUAL", "AUTO", "BIOMETRIC"]).optional().default("MANUAL"),
+  checkOutLocation: z.string().optional(),
+})
 
 // POST - Registrar salida (check-out)
 export async function POST(request: NextRequest) {
@@ -9,8 +15,15 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const validatedData = checkOutSchema.parse(body)
 
-    const attendance = await prisma.attendance.findUnique({
-      where: { id: validatedData.attendanceId },
+    // Buscar el último registro de asistencia sin check-out para este empleado hoy
+    const attendance = await prisma.attendance.findFirst({
+      where: {
+        employeeId: validatedData.employeeId,
+        checkOutTime: null, // Sin check-out
+      },
+      orderBy: {
+        createdAt: 'desc'
+      },
       include: {
         employee: {
           include: {
@@ -31,21 +44,14 @@ export async function POST(request: NextRequest) {
 
     if (!attendance) {
       return NextResponse.json(
-        { error: "Registro de asistencia no encontrado" },
+        { error: "No hay un registro de entrada activo" },
         { status: 404 }
       )
     }
 
     if (!attendance.checkInTime) {
       return NextResponse.json(
-        { error: "No se ha registrado la entrada" },
-        { status: 400 }
-      )
-    }
-
-    if (attendance.checkOutTime) {
-      return NextResponse.json(
-        { error: "Ya se registró la salida" },
+        { error: "El registro no tiene hora de entrada" },
         { status: 400 }
       )
     }
@@ -90,7 +96,7 @@ export async function POST(request: NextRequest) {
     }
 
     const updatedAttendance = await prisma.attendance.update({
-      where: { id: validatedData.attendanceId },
+      where: { id: attendance.id },
       data: {
         checkOutTime,
         checkOutMethod: validatedData.checkOutMethod,
@@ -129,8 +135,4 @@ export async function POST(request: NextRequest) {
     )
   }
 }
-
-
-
-
 

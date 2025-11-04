@@ -85,7 +85,21 @@ export default function EditWorkShiftPage({ params }: { params: { id: string } }
 
         const workShift = await response.json()
         setWorkShiftData(workShift)
-        setWorkingHours(workShift.workingHours)
+
+        // Validar que workingHours sea un array válido
+        const validWorkingHours = Array.isArray(workShift.workingHours)
+          ? workShift.workingHours
+          : [
+              { day: 0, enabled: true, startTime: "09:00", endTime: "17:00", duration: 8 },
+              { day: 1, enabled: true, startTime: "09:00", endTime: "17:00", duration: 8 },
+              { day: 2, enabled: true, startTime: "09:00", endTime: "17:00", duration: 8 },
+              { day: 3, enabled: true, startTime: "09:00", endTime: "17:00", duration: 8 },
+              { day: 4, enabled: true, startTime: "09:00", endTime: "17:00", duration: 8 },
+              { day: 5, enabled: false, startTime: "09:00", endTime: "17:00", duration: 0 },
+              { day: 6, enabled: false, startTime: "09:00", endTime: "17:00", duration: 0 },
+            ]
+
+        setWorkingHours(validWorkingHours)
 
         reset({
           name: workShift.name,
@@ -93,7 +107,7 @@ export default function EditWorkShiftPage({ params }: { params: { id: string } }
           description: workShift.description || "",
           timezone: workShift.timezone,
           weeklyHours: workShift.weeklyHours,
-          workingHours: workShift.workingHours,
+          workingHours: validWorkingHours,
           isFlexible: workShift.isFlexible,
           gracePeriodMinutes: workShift.gracePeriodMinutes,
           autoCheckoutEnabled: workShift.autoCheckoutEnabled,
@@ -425,7 +439,8 @@ export default function EditWorkShiftPage({ params }: { params: { id: string } }
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="isFlexible"
-                {...register("isFlexible")}
+                checked={watchedValues.isFlexible}
+                onCheckedChange={(checked) => setValue("isFlexible", checked as boolean)}
                 disabled={isLoading}
               />
               <div className="space-y-1">
@@ -460,7 +475,8 @@ export default function EditWorkShiftPage({ params }: { params: { id: string } }
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="autoCheckoutEnabled"
-                {...register("autoCheckoutEnabled")}
+                checked={watchedValues.autoCheckoutEnabled}
+                onCheckedChange={(checked) => setValue("autoCheckoutEnabled", checked as boolean)}
                 disabled={isLoading}
               />
               <div className="space-y-1">
@@ -477,7 +493,8 @@ export default function EditWorkShiftPage({ params }: { params: { id: string } }
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="isActive"
-                {...register("isActive")}
+                checked={watchedValues.isActive}
+                onCheckedChange={(checked) => setValue("isActive", checked as boolean)}
                 disabled={isLoading}
               />
               <Label htmlFor="isActive" className="cursor-pointer">Turno activo</Label>

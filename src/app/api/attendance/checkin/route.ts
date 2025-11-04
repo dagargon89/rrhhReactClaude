@@ -12,29 +12,34 @@ export async function POST(request: NextRequest) {
     const validatedData = checkInSchema.parse(body)
 
     const today = getTodayDateUTC()
+    const checkInTime = new Date()
 
     console.log('📅 Check-in date:', {
       today: today.toISOString(),
-      todayUTC: `${today.getUTCFullYear()}-${today.getUTCMonth() + 1}-${today.getUTCDate()}`,
+      checkInTime: checkInTime.toISOString(),
       dayOfWeek: today.getUTCDay(), // 0=domingo, 1=lunes, etc.
     })
 
-    // Verificar si ya tiene un check-in hoy
-    const existingAttendance = await prisma.attendance.findFirst({
+    // Buscar el último registro de asistencia del empleado para hoy
+    const lastAttendance = await prisma.attendance.findFirst({
       where: {
         employeeId: validatedData.employeeId,
         date: today,
       },
+      orderBy: {
+        createdAt: 'desc'
+      }
     })
 
-    if (existingAttendance?.checkInTime) {
+    // Verificar que el último registro tenga check-out antes de permitir un nuevo check-in
+    if (lastAttendance && !lastAttendance.checkOutTime) {
       return NextResponse.json(
-        { error: "Ya se registró la entrada hoy" },
+        { error: "Ya tienes una entrada activa. Debes registrar una salida primero." },
         { status: 400 }
       )
     }
 
-    // Obtener el turno del empleado
+    // Obtener el turno del empleado para calcular si llegó tarde
     const employee = await prisma.employee.findUnique({
       where: { id: validatedData.employeeId },
       include: {
@@ -59,7 +64,10 @@ export async function POST(request: NextRequest) {
     let scheduledStartTime: Date | null = null
     let tardinessResult = null
 
-    if (employee.defaultShift && employee.defaultShift.periods.length > 0) {
+    // Solo calcular tardanza en el PRIMER check-in del día
+    const isFirstCheckInOfDay = !lastAttendance
+
+    if (isFirstCheckInOfDay && employee.defaultShift && employee.defaultShift.periods.length > 0) {
       const now = new Date()
       const dayOfWeek = now.getDay()
 
@@ -91,58 +99,30 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    let attendance
-
-    if (existingAttendance) {
-      // Actualizar el registro existente
-      attendance = await prisma.attendance.update({
-        where: { id: existingAttendance.id },
-        data: {
-          checkInTime: new Date(),
-          checkInMethod: validatedData.checkInMethod,
-          checkInLocation: validatedData.checkInLocation,
-          status,
-        },
-        include: {
-          employee: {
-            select: {
-              employeeCode: true,
-              user: {
-                select: {
-                  firstName: true,
-                  lastName: true,
-                },
+    // Crear nuevo registro de asistencia
+    const attendance = await prisma.attendance.create({
+      data: {
+        employeeId: validatedData.employeeId,
+        date: today,
+        checkInTime: checkInTime,
+        checkInMethod: validatedData.checkInMethod,
+        checkInLocation: validatedData.checkInLocation,
+        status,
+      },
+      include: {
+        employee: {
+          select: {
+            employeeCode: true,
+            user: {
+              select: {
+                firstName: true,
+                lastName: true,
               },
             },
           },
         },
-      })
-    } else {
-      // Crear nuevo registro
-      attendance = await prisma.attendance.create({
-        data: {
-          employeeId: validatedData.employeeId,
-          date: today,
-          checkInTime: new Date(),
-          checkInMethod: validatedData.checkInMethod,
-          checkInLocation: validatedData.checkInLocation,
-          status,
-        },
-        include: {
-          employee: {
-            select: {
-              employeeCode: true,
-              user: {
-                select: {
-                  firstName: true,
-                  lastName: true,
-                },
-              },
-            },
-          },
-        },
-      })
-    }
+      },
+    })
 
     console.log('✅ Check-in saved:', {
       attendanceId: attendance.id,
@@ -152,13 +132,13 @@ export async function POST(request: NextRequest) {
       status: attendance.status,
     })
 
-    // Procesar tardanza si aplica (después del check-in exitoso)
-    if (minutesLate > 0 && scheduledStartTime) {
+    // Procesar tardanza solo en el primer check-in del día
+    if (isFirstCheckInOfDay && minutesLate > 0 && scheduledStartTime) {
       try {
         tardinessResult = await processTardiness({
           employeeId: validatedData.employeeId,
           minutesLate,
-          checkInTime: attendance.checkInTime!,
+          checkInTime: checkInTime,
           attendanceId: attendance.id,
         })
 
@@ -205,8 +185,4 @@ export async function POST(request: NextRequest) {
     )
   }
 }
-
-
-
-
 

@@ -209,6 +209,7 @@ model Attendance {
   @@index([date])
   @@index([status])
   @@index([shiftOverrideId])
+  @@index([employeeId, date])
   @@map("attendances")
 }
 

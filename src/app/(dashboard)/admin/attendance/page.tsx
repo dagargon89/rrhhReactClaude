@@ -2,13 +2,15 @@ import { prisma } from "@/lib/prisma"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Clock, CheckCircle2, AlertCircle, Timer } from "lucide-react"
+import { Plus, Clock, CheckCircle2, AlertCircle, Timer, RefreshCw } from "lucide-react"
 import Link from "next/link"
 import { AttendanceViewTabs } from "./components/AttendanceViewTabs"
+import { RefreshButton } from "./components/RefreshButton"
 
 // Forzar rendering dinámico
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
+export const fetchCache = 'force-no-store'
 
 async function getAttendances() {
   const attendances = await prisma.attendance.findMany({
@@ -152,6 +154,12 @@ export default async function AttendancePage() {
     getStats(),
   ])
 
+  const lastUpdate = new Date().toLocaleString('es-MX', {
+    timeZone: 'America/Chihuahua',
+    dateStyle: 'medium',
+    timeStyle: 'short'
+  })
+
   return (
     <div className="space-y-8">
       {/* Header con título y botón de acción */}
@@ -164,13 +172,19 @@ export default async function AttendancePage() {
             <p className="text-lg text-muted-foreground">
               Control de asistencias, horarios y registro de entrada/salida
             </p>
+            <p className="text-sm text-muted-foreground">
+              Última actualización: {lastUpdate}
+            </p>
           </div>
-          <Button asChild className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
-            <Link href="/admin/attendance/new">
-              <Plus className="mr-2 h-4 w-4" />
-              Registrar Asistencia
-            </Link>
-          </Button>
+          <div className="flex gap-2">
+            <RefreshButton />
+            <Button asChild className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
+              <Link href="/admin/attendance/new">
+                <Plus className="mr-2 h-4 w-4" />
+                Registrar Asistencia
+              </Link>
+            </Button>
+          </div>
         </div>
 
         {/* Estadísticas en Cards con gradientes */}
@@ -258,6 +272,7 @@ export default async function AttendancePage() {
     </div>
   )
 }
+
 
 
 

@@ -135,7 +135,7 @@ export function AttendanceWidget() {
 
   // Función para hacer check-out
   const handleCheckOut = async () => {
-    if (!status?.attendance?.id) return
+    if (!session?.user?.employeeId) return
 
     setLoading(true)
     try {
@@ -143,7 +143,7 @@ export function AttendanceWidget() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          attendanceId: status.attendance.id,
+          employeeId: session.user.employeeId,
           checkOutMethod: "MANUAL",
         }),
       })
@@ -179,16 +179,11 @@ export function AttendanceWidget() {
     hasCheckedIn: !!status?.attendance?.checkInTime,
   })
 
-  // Si ya hizo check-out, no mostrar nada
-  if (status?.attendance?.checkOutTime) {
-    return null
-  }
-
   // Determinar el color y el icono del botón
   const hasCheckedIn = !!status?.attendance?.checkInTime
   const buttonColor = hasCheckedIn
-    ? "bg-orange-500 hover:bg-orange-600"
-    : "bg-green-600 hover:bg-green-700"
+    ? "bg-green-600 hover:bg-green-700"
+    : "bg-blue-600 hover:bg-blue-700"
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -210,7 +205,7 @@ export function AttendanceWidget() {
           </DialogTitle>
           <DialogDescription>
             {hasCheckedIn
-              ? "Ya has marcado tu entrada. Puedes registrar tu salida cuando termines."
+              ? "Ya has marcado tu entrada. Puedes registrar tu salida cuando termines o cuando hagas una pausa."
               : "Marca tu entrada para comenzar a registrar tu jornada laboral."}
           </DialogDescription>
         </DialogHeader>
@@ -248,6 +243,10 @@ export function AttendanceWidget() {
                 )}
                 Registrar salida
               </Button>
+
+              <p className="text-xs text-center text-muted-foreground">
+                Puedes hacer múltiples entradas y salidas durante el día
+              </p>
             </>
           ) : (
             // No ha hecho check-in - Mostrar botón de entrada
