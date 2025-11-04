@@ -49,7 +49,8 @@
       "Bash(node check-david-attendance.js:*)",
       "Bash(git log:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []
