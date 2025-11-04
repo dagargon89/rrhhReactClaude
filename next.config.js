@@ -14,6 +14,7 @@ const nextConfig = {
     serverActions: {
       bodySizeLimit: '2mb',
     },
+    instrumentationHook: true, // Habilitar instrumentation.ts para inicializar jobs
   },
 }
 
