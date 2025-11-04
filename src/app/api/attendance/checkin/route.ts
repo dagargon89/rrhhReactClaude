@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { checkInSchema } from "@/lib/validations/attendance"
 import { processTardiness } from "@/services/tardinessService"
+import { getTodayDateUTC } from "@/lib/date-utils"
 import { z } from "zod"
 
 // POST - Registrar entrada (check-in)
@@ -10,8 +11,13 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const validatedData = checkInSchema.parse(body)
 
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
+    const today = getTodayDateUTC()
+
+    console.log('📅 Check-in date:', {
+      today: today.toISOString(),
+      todayUTC: `${today.getUTCFullYear()}-${today.getUTCMonth() + 1}-${today.getUTCDate()}`,
+      dayOfWeek: today.getUTCDay(), // 0=domingo, 1=lunes, etc.
+    })
 
     // Verificar si ya tiene un check-in hoy
     const existingAttendance = await prisma.attendance.findFirst({
