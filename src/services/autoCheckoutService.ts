@@ -82,8 +82,8 @@ export async function processAutoCheckout(): Promise<AutoCheckoutResult> {
           continue
         }
 
-        // Obtener los períodos del día actual
-        const dayOfWeek = now.getDay()
+        // Obtener los períodos del día actual (usar UTC para consistencia con el campo date)
+        const dayOfWeek = today.getUTCDay()
         const todayPeriods = shift.periods
           .filter(p => p.dayOfWeek === dayOfWeek)
           .sort((a, b) => Number(b.hourTo) - Number(a.hourTo)) // Ordenar por hora de fin descendente
@@ -98,11 +98,14 @@ export async function processAutoCheckout(): Promise<AutoCheckoutResult> {
         const endHour = Math.floor(endHourDecimal)
         const endMin = Math.round((endHourDecimal - endHour) * 60)
 
-        // Crear fecha de fin de turno
+        // Crear fecha de fin de turno en la zona horaria local
+        // Los valores hourFrom/hourTo representan horas del día en la zona horaria configurada
         const shiftEndTime = new Date(now)
         shiftEndTime.setHours(endHour, endMin, 0, 0)
 
         // Solo hacer auto-checkout si ya pasó la hora de fin del turno
+        // Nota: Esta comparación usa la hora local del servidor, que debe coincidir
+        // con la zona horaria configurada en el cron job (America/Chihuahua)
         if (now < shiftEndTime) {
           continue
         }
@@ -259,8 +262,8 @@ export async function processAutoCheckoutForEmployee(employeeId: string): Promis
     const diffMs = checkOutTime.getTime() - checkInTime.getTime()
     const workedHours = diffMs / (1000 * 60 * 60)
 
-    // Calcular horas extra
-    const dayOfWeek = now.getDay()
+    // Calcular horas extra (usar UTC para consistencia con el campo date)
+    const dayOfWeek = today.getUTCDay()
     const todayPeriods = shift.periods.filter(p => p.dayOfWeek === dayOfWeek)
     let expectedHours = 0
     for (const period of todayPeriods) {
