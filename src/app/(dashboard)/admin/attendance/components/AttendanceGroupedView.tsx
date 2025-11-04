@@ -21,8 +21,16 @@ import {
   AlertCircle,
   Timer
 } from "lucide-react"
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, parseISO } from "date-fns"
-import { es } from "date-fns/locale"
+import { format, parseISO } from "date-fns"
+import {
+  formatDateUTC,
+  toISODateUTC,
+  toYearMonthUTC,
+  getDayUTC,
+  getWeekdayShortUTC,
+  getMonthNameUTC,
+  getYearUTC,
+} from "@/lib/date-utils"
 
 interface Employee {
   id: string
@@ -58,13 +66,9 @@ export function AttendanceGroupedView({ attendances }: AttendanceGroupedViewProp
     const groups: Record<string, Record<string, Attendance[]>> = {}
 
     attendances.forEach((attendance) => {
-      // Manejar tanto strings como objetos Date
-      const date = typeof attendance.date === 'string'
-        ? parseISO(attendance.date)
-        : new Date(attendance.date)
-
-      const monthKey = format(date, "yyyy-MM")
-      const dayKey = format(date, "yyyy-MM-dd")
+      // Usar funciones UTC para evitar problemas de zona horaria
+      const monthKey = toYearMonthUTC(attendance.date)
+      const dayKey = toISODateUTC(attendance.date)
 
       if (!groups[monthKey]) {
         groups[monthKey] = {}
@@ -86,7 +90,7 @@ export function AttendanceGroupedView({ attendances }: AttendanceGroupedViewProp
   }, [groupedData])
 
   // Datos del mes seleccionado
-  const selectedMonthKey = format(selectedMonth, "yyyy-MM")
+  const selectedMonthKey = toYearMonthUTC(selectedMonth)
   const monthData = groupedData[selectedMonthKey] || {}
 
   // Días del mes seleccionado ordenados descendente
@@ -136,7 +140,7 @@ export function AttendanceGroupedView({ attendances }: AttendanceGroupedViewProp
               Seleccionar Mes
             </div>
             <Badge variant="outline" className="text-lg">
-              {format(selectedMonth, "MMMM yyyy", { locale: es })}
+              {getMonthNameUTC(selectedMonth, true)} {getYearUTC(selectedMonth)}
             </Badge>
           </CardTitle>
         </CardHeader>
@@ -156,7 +160,7 @@ export function AttendanceGroupedView({ attendances }: AttendanceGroupedViewProp
                       : "bg-white hover:bg-blue-50 border-gray-200"
                   }`}
                 >
-                  {format(monthDate, "MMMM yyyy", { locale: es })}
+                  {getMonthNameUTC(monthDate, true)} {getYearUTC(monthDate)}
                 </button>
               )
             })}
@@ -193,15 +197,15 @@ export function AttendanceGroupedView({ attendances }: AttendanceGroupedViewProp
                     <div className="flex items-center gap-4">
                       <div className="text-center">
                         <div className="text-3xl font-bold text-blue-600">
-                          {format(dayDate, "dd")}
+                          {String(getDayUTC(dayDate)).padStart(2, '0')}
                         </div>
                         <div className="text-xs text-gray-500 uppercase">
-                          {format(dayDate, "EEE", { locale: es })}
+                          {getWeekdayShortUTC(dayDate)}
                         </div>
                       </div>
                       <div>
                         <p className="text-lg font-semibold text-left">
-                          {format(dayDate, "EEEE, d 'de' MMMM 'de' yyyy", { locale: es })}
+                          {formatDateUTC(dayDate, { includeWeekday: true })}
                         </p>
                         <div className="flex items-center gap-3 mt-1 text-sm text-gray-600">
                           <span className="flex items-center gap-1">

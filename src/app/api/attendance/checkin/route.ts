@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     console.log('📅 Check-in date:', {
       today: today.toISOString(),
       checkInTime: checkInTime.toISOString(),
-      dayOfWeek: today.getUTCDay(), // 0=domingo, 1=lunes, etc.
+      dayOfWeek: today.getUTCDay(), // 0=domingo, 1=lunes, etc. (usar UTC porque `date` es DATE en MySQL)
     })
 
     // Buscar el último registro de asistencia del empleado para hoy

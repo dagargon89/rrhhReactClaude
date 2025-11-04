@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/lib/auth"
-import { isSameDay } from "@/lib/date-utils"
+import { isSameDay, getTodayDateUTC } from "@/lib/date-utils"
 
 // GET - Obtener estado de asistencia del día actual
 export async function GET(request: NextRequest) {
@@ -42,9 +42,9 @@ export async function GET(request: NextRequest) {
     let attendance = null
     if (activeAttendance) {
       const attendanceDate = new Date(activeAttendance.date)
-      const today = new Date()
+      const today = getTodayDateUTC() // Usar getTodayDateUTC() para comparar correctamente con campo DATE
 
-      // Comparar usando UTC para evitar problemas de zona horaria
+      // Comparar fechas (solo día, ignorando hora)
       const isToday = isSameDay(attendanceDate, today)
 
       console.log('📅 Date comparison:', {

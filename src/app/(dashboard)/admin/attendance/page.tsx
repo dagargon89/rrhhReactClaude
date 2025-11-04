@@ -59,10 +59,10 @@ async function getStats() {
   console.log('🚀 GETSTATS FUNCTION CALLED!')
   console.log('========================================')
 
-  // Crear rango de fechas para hoy (en UTC)
+  // Crear rango de fechas para hoy usando calendario local con formato UTC
   const now = new Date()
-  // Usar UTC para crear las fechas de inicio y fin del día
-  const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
+  // Usar Date.UTC con valores del calendario local para coincidir con campo DATE de MySQL
+  const today = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0))
   const tomorrow = new Date(today)
   tomorrow.setUTCDate(tomorrow.getUTCDate() + 1)
 
@@ -153,6 +153,18 @@ export default async function AttendancePage() {
     getAttendances(),
     getStats(),
   ])
+
+  // Serializar fechas para pasar a client components
+  const serializedAttendances = attendances.map(att => ({
+    ...att,
+    date: att.date.toISOString(),
+    checkInTime: att.checkInTime?.toISOString() || null,
+    checkOutTime: att.checkOutTime?.toISOString() || null,
+    createdAt: att.createdAt.toISOString(),
+    updatedAt: att.updatedAt.toISOString(),
+    workedHours: att.workedHours.toString(),
+    overtimeHours: att.overtimeHours.toString(),
+  }))
 
   const lastUpdate = new Date().toLocaleString('es-MX', {
     timeZone: 'America/Chihuahua',
@@ -268,7 +280,7 @@ export default async function AttendancePage() {
       </div>
 
       {/* Vista de asistencias con tabs */}
-      <AttendanceViewTabs attendances={attendances} />
+      <AttendanceViewTabs attendances={serializedAttendances} />
     </div>
   )
 }

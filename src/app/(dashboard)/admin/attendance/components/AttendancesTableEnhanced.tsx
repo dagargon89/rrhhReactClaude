@@ -26,6 +26,7 @@ import {
 } from "lucide-react"
 import { AttendanceActions } from "./AttendanceActions"
 import { format } from "date-fns"
+import { formatDateUTC, toISODateUTC } from "@/lib/date-utils"
 
 interface AttendancesTableEnhancedProps {
   attendances: any[]
@@ -48,7 +49,7 @@ export function AttendancesTableEnhanced({ attendances }: AttendancesTableEnhanc
         statusFilter === "all" || attendance.status === statusFilter
 
       const matchesDate =
-        !dateFilter || format(new Date(attendance.date), "yyyy-MM-dd") === dateFilter
+        !dateFilter || toISODateUTC(attendance.date) === dateFilter
 
       return matchesSearch && matchesStatus && matchesDate
     })
@@ -132,12 +133,7 @@ export function AttendancesTableEnhanced({ attendances }: AttendancesTableEnhanc
         return (
           <div className="flex items-center gap-1 text-sm">
             <Calendar className="h-3 w-3 text-muted-foreground" />
-            {new Date(row.getValue("date")).toLocaleDateString('es-ES', {
-              weekday: 'short',
-              year: 'numeric',
-              month: 'short',
-              day: 'numeric',
-            })}
+            {formatDateUTC(row.getValue("date"), { includeWeekday: true, short: true })}
           </div>
         )
       },

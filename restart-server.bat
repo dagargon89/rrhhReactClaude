@@ -1,0 +1,6 @@
+@echo off
+echo Matando todos los procesos Node.js...
+taskkill /F /IM node.exe 2>nul
+timeout /t 2 /nobreak >nul
+echo Iniciando servidor...
+npm run dev

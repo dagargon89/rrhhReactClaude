@@ -50,7 +50,9 @@
       "Bash(git log:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(node check-auto-checkout-debug.js:*)",
+      "Bash(node check-today-attendance.js:*)"
     ],
     "deny": [],
     "ask": []
