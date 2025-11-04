@@ -42,7 +42,14 @@
       "Bash(node check-user-employee.js:*)",
       "Bash(node seed-complete-test-data.js:*)",
       "Bash(node check-employees.js:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(nul)",
+      "Bash(cmd /c \"taskkill /F /PID 13020\")",
+      "Bash(npx kill-port:*)",
+      "Bash(node check-david-attendance.js:*)",
+      "Bash(git log:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []

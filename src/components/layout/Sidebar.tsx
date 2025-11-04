@@ -17,6 +17,7 @@ import {
   Palmtree,
   TrendingUp,
   ShieldAlert,
+  User,
 } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
 
@@ -50,6 +51,7 @@ const iconMap = {
   Palmtree,
   TrendingUp,
   ShieldAlert,
+  User,
 }
 
 export function Sidebar({ sections }: SidebarProps) {

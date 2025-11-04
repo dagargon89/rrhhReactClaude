@@ -63,6 +63,15 @@ export default async function DashboardLayout({
             { title: "Reportes", href: "/admin/reports", icon: "BarChart3" },
           ]
         },
+        // Mi Cuenta
+        {
+          title: "Mi Cuenta",
+          items: [
+            { title: "Mi Asistencia", href: "/admin/mi-cuenta/asistencia", icon: "Clock" },
+            { title: "Mis Vacaciones", href: "/admin/mi-cuenta/vacaciones", icon: "Palmtree" },
+            { title: "Mi Perfil", href: "/admin/mi-cuenta/perfil", icon: "User" },
+          ]
+        },
       ]
     : [
         // Dashboard empleado

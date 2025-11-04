@@ -28,6 +28,7 @@ import {
   Palmtree,
   TrendingUp,
   ShieldAlert,
+  User,
 } from "lucide-react"
 
 interface NavItem {
@@ -60,6 +61,7 @@ const iconMap = {
   Palmtree,
   TrendingUp,
   ShieldAlert,
+  User,
 }
 
 export function MobileSidebar({ sections }: MobileSidebarProps) {

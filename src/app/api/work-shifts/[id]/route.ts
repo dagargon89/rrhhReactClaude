@@ -12,29 +12,14 @@ export async function GET(
     const workShift = await prisma.workShift.findUnique({
       where: { id: params.id },
       include: {
-        schedules: {
-          include: {
-            employee: {
-              select: {
-                id: true,
-                employeeCode: true,
-                user: {
-                  select: {
-                    firstName: true,
-                    lastName: true,
-                  },
-                },
-              },
-            },
-          },
-          take: 10,
+        periods: {
           orderBy: {
-            date: "desc",
+            dayOfWeek: 'asc',
           },
         },
         _count: {
           select: {
-            schedules: true,
+            employeesWithDefault: true,
           },
         },
       },
@@ -47,10 +32,50 @@ export async function GET(
       )
     }
 
-    // Parsear workingHours de string JSON a objeto
+    // Convertir periods a workingHours para compatibilidad con UI
+    // Crear array de 7 días (0=Lunes, 1=Martes, etc.)
+    const workingHours = Array.from({ length: 7 }, (_, day) => {
+      const period = workShift.periods.find(p => p.dayOfWeek === day)
+
+      if (period) {
+        // Convertir hourFrom y hourTo de decimal a string "HH:MM"
+        const hourFrom = Number(period.hourFrom)
+        const hourTo = Number(period.hourTo)
+
+        const startHour = Math.floor(hourFrom)
+        const startMin = Math.round((hourFrom - startHour) * 60)
+        const endHour = Math.floor(hourTo)
+        const endMin = Math.round((hourTo - endHour) * 60)
+
+        const startTime = `${String(startHour).padStart(2, '0')}:${String(startMin).padStart(2, '0')}`
+        const endTime = `${String(endHour).padStart(2, '0')}:${String(endMin).padStart(2, '0')}`
+
+        const duration = hourTo - hourFrom
+
+        return {
+          day,
+          enabled: true,
+          startTime,
+          endTime,
+          duration: Number(duration.toFixed(2)),
+        }
+      }
+
+      // Si no hay period para este día, está deshabilitado
+      return {
+        day,
+        enabled: false,
+        startTime: "09:00",
+        endTime: "17:00",
+        duration: 0,
+      }
+    })
+
     const workShiftWithParsed = {
       ...workShift,
-      workingHours: workShift.workingHours ? JSON.parse(workShift.workingHours) : null,
+      workingHours,
+      isFlexible: false, // Campo legacy para compatibilidad
+      periods: undefined, // No enviar periods a la UI
     }
 
     return NextResponse.json(workShiftWithParsed)
@@ -98,32 +123,110 @@ export async function PUT(
       }
     }
 
-    // Limpiar valores undefined y preparar datos
+    // Extraer workingHours antes de preparar cleanedData
+    const workingHours = validatedData.workingHours
+
+    // Limpiar valores undefined y preparar datos (sin workingHours ni isFlexible)
     const cleanedData: any = Object.fromEntries(
-      Object.entries(validatedData).filter(([_, value]) => value !== undefined)
+      Object.entries(validatedData).filter(([key, value]) =>
+        value !== undefined && key !== 'workingHours' && key !== 'isFlexible'
+      )
     )
 
-    // Convertir workingHours a JSON string si existe
-    if (cleanedData.workingHours) {
-      cleanedData.workingHours = JSON.stringify(cleanedData.workingHours)
-    }
+    // Actualizar el turno y sus períodos en una transacción
+    const updatedShift = await prisma.$transaction(async (tx) => {
+      // Actualizar turno básico
+      const shift = await tx.workShift.update({
+        where: { id: params.id },
+        data: cleanedData,
+      })
 
-    const updatedShift = await prisma.workShift.update({
-      where: { id: params.id },
-      data: cleanedData,
-      include: {
-        _count: {
-          select: {
-            schedules: true,
+      // Si hay workingHours, actualizar los períodos
+      if (workingHours && Array.isArray(workingHours)) {
+        // Eliminar períodos existentes
+        await tx.workShiftPeriod.deleteMany({
+          where: { workShiftId: params.id },
+        })
+
+        // Crear nuevos períodos solo para días habilitados
+        const periodsToCreate = workingHours
+          .filter(day => day.enabled)
+          .map(day => {
+            // Convertir "HH:MM" a decimal
+            const [startHour, startMin] = day.startTime.split(':').map(Number)
+            const [endHour, endMin] = day.endTime.split(':').map(Number)
+
+            const hourFrom = startHour + (startMin / 60)
+            const hourTo = endHour + (endMin / 60)
+
+            return {
+              workShiftId: params.id,
+              dayOfWeek: day.day,
+              hourFrom,
+              hourTo,
+              dayPeriod: hourFrom < 12 ? 'MORNING' : (hourFrom < 18 ? 'AFTERNOON' : 'NIGHT'),
+            }
+          })
+
+        if (periodsToCreate.length > 0) {
+          await tx.workShiftPeriod.createMany({
+            data: periodsToCreate,
+          })
+        }
+      }
+
+      // Retornar el turno actualizado con sus períodos
+      return await tx.workShift.findUnique({
+        where: { id: params.id },
+        include: {
+          periods: {
+            orderBy: {
+              dayOfWeek: 'asc',
+            },
           },
         },
-      },
+      })
     })
 
-    // Parsear workingHours de vuelta a objeto para la respuesta
+    // Convertir periods a workingHours para la respuesta
+    const responseWorkingHours = Array.from({ length: 7 }, (_, day) => {
+      const period = updatedShift?.periods.find(p => p.dayOfWeek === day)
+
+      if (period) {
+        const hourFrom = Number(period.hourFrom)
+        const hourTo = Number(period.hourTo)
+
+        const startHour = Math.floor(hourFrom)
+        const startMin = Math.round((hourFrom - startHour) * 60)
+        const endHour = Math.floor(hourTo)
+        const endMin = Math.round((hourTo - endHour) * 60)
+
+        const startTime = `${String(startHour).padStart(2, '0')}:${String(startMin).padStart(2, '0')}`
+        const endTime = `${String(endHour).padStart(2, '0')}:${String(endMin).padStart(2, '0')}`
+
+        return {
+          day,
+          enabled: true,
+          startTime,
+          endTime,
+          duration: Number((hourTo - hourFrom).toFixed(2)),
+        }
+      }
+
+      return {
+        day,
+        enabled: false,
+        startTime: "09:00",
+        endTime: "17:00",
+        duration: 0,
+      }
+    })
+
     const workShiftWithParsed = {
       ...updatedShift,
-      workingHours: updatedShift.workingHours ? JSON.parse(updatedShift.workingHours) : null,
+      workingHours: responseWorkingHours,
+      isFlexible: false,
+      periods: undefined,
     }
 
     return NextResponse.json(workShiftWithParsed)
@@ -155,7 +258,7 @@ export async function DELETE(
       include: {
         _count: {
           select: {
-            schedules: true,
+            employeesWithDefault: true,
           },
         },
       },
@@ -168,19 +271,25 @@ export async function DELETE(
       )
     }
 
-    // Verificar que no tenga horarios asignados
-    if (existingShift._count.schedules > 0) {
+    // Verificar que no tenga empleados asignados
+    if (existingShift._count.employeesWithDefault > 0) {
       return NextResponse.json(
         {
-          error: "No se puede eliminar el turno porque tiene horarios asignados",
-          schedulesCount: existingShift._count.schedules
+          error: "No se puede eliminar el turno porque tiene empleados asignados",
+          employeesCount: existingShift._count.employeesWithDefault
         },
         { status: 400 }
       )
     }
 
-    await prisma.workShift.delete({
-      where: { id: params.id },
+    // Eliminar en transacción: primero períodos, luego turno
+    await prisma.$transaction(async (tx) => {
+      await tx.workShiftPeriod.deleteMany({
+        where: { workShiftId: params.id },
+      })
+      await tx.workShift.delete({
+        where: { id: params.id },
+      })
     })
 
     return NextResponse.json({
