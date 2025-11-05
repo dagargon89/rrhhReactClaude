@@ -22,8 +22,9 @@ interface AutoCheckoutResult {
 
 /**
  * Ejecuta el auto-checkout para todas las asistencias pendientes
+ * @param targetDate - Fecha específica para procesar (opcional, por defecto usa hoy)
  */
-export async function processAutoCheckout(): Promise<AutoCheckoutResult> {
+export async function processAutoCheckout(targetDate?: Date): Promise<AutoCheckoutResult> {
   console.log('🔄 Iniciando proceso de auto-checkout...')
 
   const result: AutoCheckoutResult = {
@@ -35,7 +36,10 @@ export async function processAutoCheckout(): Promise<AutoCheckoutResult> {
 
   try {
     const now = new Date()
-    const today = getTodayDateUTC()
+    // Si se proporciona una fecha específica, usarla; de lo contrario, usar hoy
+    const today = targetDate || getTodayDateUTC()
+
+    console.log('📅 Procesando auto-checkout para fecha:', today.toISOString())
 
     // Buscar todas las asistencias activas (con check-in pero sin check-out) del día de hoy
     const activeAttendances = await prisma.attendance.findMany({
@@ -98,17 +102,24 @@ export async function processAutoCheckout(): Promise<AutoCheckoutResult> {
         const endHour = Math.floor(endHourDecimal)
         const endMin = Math.round((endHourDecimal - endHour) * 60)
 
-        // Crear fecha de fin de turno en la zona horaria local
-        // Los valores hourFrom/hourTo representan horas del día en la zona horaria configurada
-        const shiftEndTime = new Date(now)
-        shiftEndTime.setHours(endHour, endMin, 0, 0)
+        // Para auto-checkout manual de fechas pasadas, saltarse la validación de tiempo
+        // Solo validar la hora si estamos procesando el día actual
+        const isProcessingToday = !targetDate || (today.getTime() === getTodayDateUTC().getTime())
 
-        // Solo hacer auto-checkout si ya pasó la hora de fin del turno
-        // Nota: Esta comparación usa la hora local del servidor, que debe coincidir
-        // con la zona horaria configurada en el cron job (America/Chihuahua)
-        if (now < shiftEndTime) {
-          continue
+        if (isProcessingToday) {
+          // Crear fecha de fin de turno en la zona horaria local
+          // Los valores hourFrom/hourTo representan horas del día en la zona horaria configurada
+          const shiftEndTime = new Date(now)
+          shiftEndTime.setHours(endHour, endMin, 0, 0)
+
+          // Solo hacer auto-checkout si ya pasó la hora de fin del turno
+          // Nota: Esta comparación usa la hora local del servidor, que debe coincidir
+          // con la zona horaria configurada en el cron job (America/Chihuahua)
+          if (now < shiftEndTime) {
+            continue
+          }
         }
+        // Para fechas pasadas, asumimos que ya pasó la hora de fin del turno
 
         console.log(`⏰ Procesando auto-checkout para ${attendance.employee.user.firstName} ${attendance.employee.user.lastName}`)
 

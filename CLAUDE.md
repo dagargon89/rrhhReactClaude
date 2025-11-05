@@ -227,3 +227,4 @@ npm run test:e2e
 ---
 
 **Nota:** Este archivo contiene la información esencial del proyecto. Para detalles específicos de implementación, consultar los archivos de código fuente.
+- cuando diga "sincroniza o Sincroniza" haz git add, git commit y git push

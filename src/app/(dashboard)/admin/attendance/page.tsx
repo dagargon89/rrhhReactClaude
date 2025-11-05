@@ -6,6 +6,7 @@ import { Plus, Clock, CheckCircle2, AlertCircle, Timer, RefreshCw } from "lucide
 import Link from "next/link"
 import { AttendanceViewTabs } from "./components/AttendanceViewTabs"
 import { RefreshButton } from "./components/RefreshButton"
+import { ManualAutoCheckoutButton } from "./components/ManualAutoCheckoutButton"
 
 // Forzar rendering dinámico
 export const dynamic = 'force-dynamic'
@@ -190,6 +191,7 @@ export default async function AttendancePage() {
           </div>
           <div className="flex gap-2">
             <RefreshButton />
+            <ManualAutoCheckoutButton />
             <Button asChild className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
               <Link href="/admin/attendance/new">
                 <Plus className="mr-2 h-4 w-4" />

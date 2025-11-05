@@ -13,6 +13,7 @@ import {
 import { format, startOfMonth, endOfMonth, differenceInMinutes } from "date-fns"
 import { es } from "date-fns/locale"
 import { redirect } from "next/navigation"
+import { formatDateUTC } from "@/lib/date-utils"
 
 async function getEmployeeAttendance(employeeId: string) {
   const today = new Date()
@@ -57,8 +58,20 @@ async function getEmployeeAttendance(employeeId: string) {
   const late = 0 // Las tardanzas se manejan en otro módulo
   const absent = attendances.filter(a => a.status === 'ABSENT').length
 
+  // Serializar las fechas para evitar problemas con Server Components
+  const serializedAttendances = attendances.map(att => ({
+    ...att,
+    date: att.date.toISOString(),
+    checkInTime: att.checkInTime?.toISOString() || null,
+    checkOutTime: att.checkOutTime?.toISOString() || null,
+    createdAt: att.createdAt.toISOString(),
+    updatedAt: att.updatedAt.toISOString(),
+    workedHours: att.workedHours.toString(),
+    overtimeHours: att.overtimeHours.toString(),
+  }))
+
   return {
-    attendances,
+    attendances: serializedAttendances,
     stats: {
       total: stats._count,
       onTime,
@@ -176,7 +189,7 @@ export default async function MyAttendanceView() {
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       <p className="font-medium">
-                        {format(new Date(attendance.date), "EEEE, d 'de' MMMM 'de' yyyy", { locale: es })}
+                        {formatDateUTC(attendance.date, { includeWeekday: true })}
                       </p>
                       {getStatusBadge(attendance.status)}
                     </div>

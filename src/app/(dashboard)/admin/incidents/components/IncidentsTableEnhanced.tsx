@@ -43,7 +43,7 @@ const incidentTypeNames: Record<string, { label: string; icon: any; color: strin
   },
 }
 
-export function IncidentsTable({ incidents }: IncidentsTableProps) {
+export function IncidentsTableEnhanced({ incidents }: IncidentsTableProps) {
   // Estados para búsqueda y filtros
   const [searchTerm, setSearchTerm] = useState("")
   const [typeFilter, setTypeFilter] = useState("all")
